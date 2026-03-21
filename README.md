@@ -1,7 +1,7 @@
-# SoC-IP-Portfolyo
+# soc-ip-portfolio
 A modular SystemVerilog-based SoC IP library including arithmetic units, bus interfaces, DSP blocks, peripherals, and cryptographic cores.
 ```
-SoC-IP-Portfolyo/
+soc-ip-portfolio/
 │
 ├── arithmetic/
 │ ├── adder.sv
