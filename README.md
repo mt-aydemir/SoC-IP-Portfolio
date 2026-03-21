@@ -1,6 +1,6 @@
 # SoC-IP-Portfolyo
 A modular SystemVerilog-based SoC IP library including arithmetic units, bus interfaces, DSP blocks, peripherals, and cryptographic cores.
-
+```
 SoC-IP-Portfolyo/
 │
 ├── arithmetic/
@@ -41,3 +41,4 @@ SoC-IP-Portfolyo/
 ├── aes128.sv
 ├── sha256.sv
 └── lfsr_rng.sv
+```
