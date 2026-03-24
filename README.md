@@ -1,4 +1,4 @@
-# soc-ip-portfolio
+# SoC-IP-Portfolio
 A modular SystemVerilog-based SoC IP library including arithmetic units, bus interfaces, DSP blocks, peripherals, and cryptographic cores.
 ```
 soc-ip-portfolio/
