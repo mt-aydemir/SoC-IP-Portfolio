@@ -38,7 +38,7 @@ soc-ip-portfolio/
 │ └── systolic_array.sv
 │
 └── crypto/
-├── aes128.sv
-├── sha256.sv
-└── lfsr_rng.sv
+  ├── aes128.sv
+  ├── sha256.sv
+  └── lfsr_rng.sv
 ```
