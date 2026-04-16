@@ -71,15 +71,15 @@ module cordic #(
 
     function logic [WIDTH-1:0] cordic_angle(input int iteration);
         case (iteration)
-            0:  cordic_angle = 32'h2_C8CB_F0E8;
-            1:  cordic_angle = 32'h1_76D0_47C4;
-            2:  cordic_angle = 32'h0_ADCB_F0E7;
-            3:  cordic_angle = 32'h0_56F8_AC81;
-            4:  cordic_angle = 32'h0_2B75_D85F;
-            5:  cordic_angle = 32'h0_15BA_9796;
-            6:  cordic_angle = 32'h0_0ADD_95DF;
-            7:  cordic_angle = 32'h0_056E_1FB1;
-            8:  cordic_angle = 32'h0_02B7_A0E0;
+            0:  cordic_angle = 32'h2_C8CB_F0E8; //atan(2^0) 
+            1:  cordic_angle = 32'h1_76D0_47C4; //atan(2^-1)
+            2:  cordic_angle = 32'h0_ADCB_F0E7; //atan(2^-2)
+            3:  cordic_angle = 32'h0_56F8_AC81; //atan(2^-3)
+            4:  cordic_angle = 32'h0_2B75_D85F; //atan(2^-4)
+            5:  cordic_angle = 32'h0_15BA_9796; //atan(2^-5)
+            6:  cordic_angle = 32'h0_0ADD_95DF; //atan(2^-6)
+            7:  cordic_angle = 32'h0_056E_1FB1; //atan(2^-7)
+            8:  cordic_angle = 32'h0_02B7_A0E0; //atan(2^-8)
             default: cordic_angle = '0;
         endcase
     endfunction
