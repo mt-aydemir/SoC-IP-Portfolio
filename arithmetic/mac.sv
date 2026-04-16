@@ -6,13 +6,10 @@ module mac #(
 )(
     input  logic clk,
     input  logic rst_n,
-
     input  logic en,
     input  logic clear,
-
     input  logic signed [A_WIDTH-1:0] a,
     input  logic signed [B_WIDTH-1:0] b,
-
     output logic signed [ACC_WIDTH-1:0] acc_out
 );
 
