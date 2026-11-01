@@ -1,0 +1,17 @@
+#=============================================================================
+# ip/bus/apb_slave
+#
+# A single add_ip() call registers the complete flow:
+#   lint -> cocotb simulation + SystemVerilog testbench -> synthesis -> timing
+#=============================================================================
+add_ip(
+  NAME            apb_slave
+  TOP             apb_slave
+  SOURCES         rtl/apb_slave.sv
+  SVTB            tb/tb_apb_slave.sv
+  COCOTB_MODULES  test_apb_slave
+  PARAMS          ADDR_WIDTH=12 DATA_WIDTH=32 REGISTERED=1
+  CLOCK_PERIOD_NS 5.0
+  CLOCK_PORT      clk
+  STA_SDC         scripts/apb_slave.sdc
+)

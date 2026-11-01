@@ -50,6 +50,7 @@ def parse_args() -> argparse.Namespace:
 def substitute(text: str, name: str, category: str) -> str:
     """Replace the template identifiers with the new block's own."""
     text = text.replace(TEMPLATE_TOKEN, name)
+    text = text.replace(TEMPLATE_TOKEN.upper(), name.upper())
     text = text.replace("<category>", category)
     text = text.replace("2026-01-01", _dt.date.today().isoformat())
     return text

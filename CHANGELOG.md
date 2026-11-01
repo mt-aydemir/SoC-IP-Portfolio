@@ -11,6 +11,22 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`bus` category: `apb_slave`, `axi4_lite_slave`, `axi4_stream_slice`.**
+  The two register slaves bridge APB4 and AXI4-Lite onto one shared
+  ready/valid register request port, so register logic written once sits
+  behind either bus. `apb_slave` has a zero-wait combinational mode and a
+  registered mode; `axi4_lite_slave` handles its five channels
+  independently, has no combinational path from any AXI input to any
+  output, and alternates reads and writes under saturation without arbiter
+  state. `axi4_stream_slice` is a register slice in five modes - bypass,
+  forward, reverse, full (skid buffer) and light - carrying every
+  AXI4-Stream sideband. Each suite drives the bus from a model written from
+  the AMBA specification; the APB and stream SV testbenches run every mode
+  side by side, and a mutation campaign confirmed each suite catches
+  injected protocol bugs. The catalogue is now 36 IPs.
+- The IP template's constraint fragment is portable and sourced by the
+  timing stage, and `new_ip.py` now substitutes the template's upper-case
+  identifier, which it used to leave as `TEMPLATE_IP` in every new block.
 - **`arithmetic` category: ten datapath primitives.** `adder`, `subtractor`,
   `comparator`, `barrel_shifter`, `multiplier`, `accumulator`, `mac`, `alu`,
   `divider` and `cordic`, each brought to the full per-IP layout: a

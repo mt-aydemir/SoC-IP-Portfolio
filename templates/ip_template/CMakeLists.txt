@@ -13,4 +13,5 @@ add_ip(
   PARAMS          DATA_WIDTH=8
   CLOCK_PERIOD_NS 10.0
   CLOCK_PORT      clk
+  STA_SDC         scripts/template_ip.sdc
 )
