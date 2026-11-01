@@ -107,7 +107,8 @@ if [ "$DO_VENV" = 1 ]; then
     myst-parser \
     sphinxcontrib-wavedrom \
     numpy \
-    pyyaml
+    pyyaml \
+    z3-solver
 fi
 
 #-----------------------------------------------------------------------------

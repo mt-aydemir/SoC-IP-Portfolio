@@ -314,6 +314,9 @@ Verification
    * - ``tb/tb_alu.sv``
      - Portable self-checking testbench sweeping every opcode and carry value
        across the operand space at ``WIDTH=8``, plus randomised vectors.
+   * - ``formal/alu_formal.sv``
+     - Exhaustive equivalence proof at ``WIDTH=16``: every opcode, the result
+       and all four flags against integer-arithmetic references.
 
 .. code-block:: bash
 

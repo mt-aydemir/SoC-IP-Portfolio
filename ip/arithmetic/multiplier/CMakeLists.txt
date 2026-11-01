@@ -16,4 +16,7 @@ add_ip(
   CLOCK_PERIOD_NS 5.0
   CLOCK_PORT      clk
   STA_SDC         scripts/multiplier.sdc
+  FORMAL_TOP      multiplier_formal
+  FORMAL_SOURCES  formal/multiplier_formal.sv
+  FORMAL_DEPTH    5
 )

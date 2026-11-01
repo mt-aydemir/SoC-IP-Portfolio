@@ -14,4 +14,6 @@ add_ip(
   CLOCK_PERIOD_NS 5.0
   CLOCK_PORT      clk
   STA_SDC         scripts/lfsr_rng.sdc
+  FORMAL_TOP      lfsr_rng_formal
+  FORMAL_SOURCES  formal/lfsr_rng_formal.sv
 )

@@ -148,11 +148,99 @@ Writing a test module
        ...
        board.check_done()
 
+Formal proofs
+=============
+
+Twelve blocks also carry a property wrapper, ``formal/<name>_formal.sv``,
+proved by SymbiYosys in the flow's stage 2c. Simulation shows that a block
+works on the traffic it was given; a proof shows it for every input
+sequence from reset.
+
+What a wrapper contains
+-----------------------
+
+* **Assumptions** that constrain the inputs to the interface protocol - an
+  AXI source holds TVALID until TREADY, an APB requester follows a setup
+  phase with an access phase - and the reset at time zero. Nothing else is
+  assumed.
+* **Assertions** of the block's guarantees, at the ports: results against a
+  reference written from the header's definition, handshake rules, and
+  ordering. Where a block only moves data, the source sends sequence
+  numbers - the block never looks at the data, so nothing is lost - and
+  every word must come out once, in order.
+* **Probes** of internal state. k-induction needs properties that pin down
+  the whole state, and a word held under a stall of any length is invisible
+  at the ports. The free Yosys frontend has no hierarchical references, so
+  a wrapper declares an undriven ``(* keep *)`` wire and names its source,
+
+  .. code-block:: systemverilog
+
+     // formal-connect: f_state = dut.state
+     (* keep *) wire [7:0] f_state;
+
+  and ``run_formal.py`` flattens the design and joins the two with
+  ``connect -set``. The RTL carries no formal code at all.
+* **Covers** of the behaviour the assertions are about - a full FIFO, a
+  stalled beat, a SLVERR. An unreached cover fails the stage: it is how a
+  set of assumptions that rules out the interesting behaviour, and so makes
+  a proof vacuous, shows up.
+
+The RTL is read with ``SYNTHESIS`` defined, so its simulation-only SVA,
+which uses constructs the free frontend does not parse, stays out.
+
+What is proved
+--------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 24 76
+
+   * - Block
+     - Proof
+   * - ``adder``, ``subtractor``, ``comparator``, ``barrel_shifter``, ``alu``
+     - Exhaustive equivalence at 16 bits (and 12 for the shifter) against
+       integer-arithmetic references, every configuration at once.
+   * - ``multiplier``
+     - The exact product of the operands two cycles earlier, signed and
+       unsigned, with the valid pipeline.
+   * - ``fifo_sync``
+     - Order, level, flags and hold at a non-power-of-two depth, with every
+       stored word's position in the sequence stated.
+   * - ``axi4_stream_slice``
+     - All five modes: order with every sideband, capacity, hold and each
+       mode's documented ready timing.
+   * - ``apb_slave``
+     - Both response modes: one register request per transfer, payload,
+       response and wait-state timing.
+   * - ``axi4_lite_slave``
+     - Pairing of AW, W and AR with their requests, one response each,
+       responses, hold and read/write alternation.
+   * - ``mac_array``
+     - Complete equivalence: every result is its vector's dot product, in
+       order, with the credit flow control and the latency.
+   * - ``lfsr_rng``
+     - Equivalence with a bit-serial model of the recurrence, seeding and
+       stalls included; the state never reaches zero.
+
+A mutation campaign injected two or more bugs into each of these blocks;
+every proof failed on every mutant.
+
+Blocks without proofs are the CDC and clocking blocks, whose properties
+need multi-clock formal modelling of metastability; the DSP and crypto
+datapaths, where a proof at a useful width is beyond an SMT solver's
+reach on multipliers and S-boxes and simulation against independent models
+is the stronger evidence; and the peripherals, whose serial timing is
+checked in simulation.
+
+.. code-block:: bash
+
+   ctest --test-dir build -L formal
+
 Coverage of the flow, not of lines
 ==================================
 
 The portfolio does not chase statement coverage. What is checked instead is
-that each block passes all four flow stages under every parameter set that is
+that each block passes every flow stage under every parameter set that is
 claimed to be supported:
 
 * lint clean under ``-Wall``, with no in-source waivers and every tool-level

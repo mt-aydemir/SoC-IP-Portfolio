@@ -6,8 +6,8 @@ The repository is driven by CMake with the Ninja generator. CMake is not
 compiling C here: it is used as a dependency-aware job scheduler for the EDA
 flow, and CTest is used as the regression runner.
 
-The four stages
-===============
+The stages
+==========
 
 Every IP passes through the same pipeline. Each stage is a CTest fixture, so
 the ordering is enforced by the test runner rather than by convention.
@@ -32,6 +32,10 @@ the ordering is enforced by the test runner rather than by convention.
      - Verilator ``--binary``
      - ``scripts/run_svtb.py``
      - Executable exits zero and prints ``TEST PASSED``
+   * - 2c
+     - SymbiYosys + Z3
+     - ``scripts/run_formal.py``
+     - Every assertion proved by k-induction and every cover reached
    * - 3
      - Yosys
      - ``scripts/run_synth.py``
@@ -45,6 +49,9 @@ Stage 2b is the Python-free path: it compiles the IP together with the
 self-checking SystemVerilog testbench in ``tb/``. It exists so that every block
 is provably usable on a plain SystemVerilog simulator, with no cocotb
 dependency.
+
+Stage 2c runs for the blocks that register a property wrapper; see
+:doc:`verification` for what the proofs cover and how they are written.
 
 Registering an IP
 =================
@@ -116,6 +123,18 @@ Arguments
    * - ``SDC_CLOCKS``
      - Further clock ports for the check-only test; ``CLOCK_PORT`` is always
        the first.
+   * - ``FORMAL_TOP``
+     - Property wrapper module. Registers ``formal.<category>.<name>``,
+       which proves every assertion in the wrapper by k-induction and
+       requires every cover statement to be reached.
+   * - ``FORMAL_SOURCES``
+     - The wrapper's files, relative to the IP directory, conventionally
+       ``formal/<name>_formal.sv``.
+   * - ``FORMAL_DEPTH``
+     - Induction and cover depth. Defaults to 20.
+   * - ``FORMAL_PARAMS``
+     - ``NAME=VALUE`` parameters of the wrapper. ``PARAMS`` do not apply:
+       proofs run at small configurations of their own.
    * - ``NO_LINT`` ``NO_SIM`` ``NO_SYNTH`` ``NO_STA``
      - Opt out of a stage. Used only where a stage is meaningless, for example
        timing analysis on a purely combinational block.
@@ -171,6 +190,7 @@ configure summary states exactly what was found:
      Verilator      : Verilator 5.020 2024-01-01
      Yosys          : Yosys 0.33
      OpenSTA        : /home/user/.local/bin/sta
+     Formal         : /home/user/.venvs/soc-ip-portfolio/bin/yowasp-sby + z3
      cocotb python  : /home/user/.venvs/soc-ip-portfolio/bin/python (cocotb 1.9.2)
      Sphinx         : /home/user/.venvs/soc-ip-portfolio/bin/sphinx-build
      Build root     : /mnt/c/Users/user/soc-ip-portfolio/build

@@ -18,4 +18,7 @@ add_ip(
   CLOCK_PERIOD_NS 5.0
   CLOCK_PORT      clk
   STA_SDC         scripts/mac_array.sdc
+  FORMAL_TOP      mac_array_formal
+  FORMAL_SOURCES  formal/mac_array_formal.sv
+  FORMAL_DEPTH    10
 )

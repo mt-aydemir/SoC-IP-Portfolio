@@ -187,6 +187,10 @@ Verification
      - All five modes side by side, each with its own source and sink;
        payloads derived from the beat index. Random flow, then a full-rate
        phase that checks each mode's exact cycle count.
+   * - ``formal/axi4_stream_slice_formal.sv``
+     - k-induction proof of all five modes: beats leave once, in
+       order, with every sideband; capacity, hold and each mode's ready
+       timing.
 
 .. code-block:: bash
 

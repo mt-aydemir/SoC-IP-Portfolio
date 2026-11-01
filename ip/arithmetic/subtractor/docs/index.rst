@@ -234,6 +234,10 @@ Verification
    * - ``tb/tb_subtractor.sv``
      - Portable self-checking testbench: the directed corners, an exhaustive
        sweep at ``WIDTH=8`` and randomised vectors.
+   * - ``formal/subtractor_formal.sv``
+     - Exhaustive equivalence proof at ``WIDTH=16``: all four
+       configurations against the borrow, overflow and saturation rules
+       written as integer arithmetic on a wider difference.
 
 Both reference models compute the exact difference in an arithmetic wider than
 the design uses and then ask whether the value was representable. They share

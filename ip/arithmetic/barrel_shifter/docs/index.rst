@@ -238,6 +238,9 @@ Verification
      - Portable self-checking testbench: the directed cases, an exhaustive
        sweep of every operation, amount and data value at ``WIDTH=8``, the
        rotate round trip and randomised vectors.
+   * - ``formal/barrel_shifter_formal.sv``
+     - Exhaustive equivalence proof at ``WIDTH=16`` and ``WIDTH=12``,
+       out-of-range amounts included, against a bit-at-a-time reference.
 
 The two properties that carry the most weight are the ones that need no model
 at all. A **single-bit walk** makes the result of every operation a single

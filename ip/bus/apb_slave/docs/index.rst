@@ -184,6 +184,10 @@ Verification
    * - ``tb/tb_apb_slave.sv``
      - Both modes side by side, each behind its own register block with
        pseudo-random wait states and an error word.
+   * - ``formal/apb_slave_formal.sv``
+     - k-induction proof of both response modes against an APB4
+       requester: one register request per transfer, payload, response and
+       wait-state timing.
 
 .. code-block:: bash
 

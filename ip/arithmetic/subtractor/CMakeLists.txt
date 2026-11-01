@@ -14,4 +14,7 @@ add_ip(
   COCOTB_MODULES  test_subtractor
   PARAMS          WIDTH=16 SIGNED=1 SATURATE=1
   NO_STA
+  FORMAL_TOP      subtractor_formal
+  FORMAL_SOURCES  formal/subtractor_formal.sv
+  FORMAL_DEPTH    2
 )

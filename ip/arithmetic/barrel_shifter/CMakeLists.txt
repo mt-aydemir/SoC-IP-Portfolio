@@ -13,4 +13,7 @@ add_ip(
   COCOTB_MODULES  test_barrel_shifter
   PARAMS          WIDTH=32
   NO_STA
+  FORMAL_TOP      barrel_shifter_formal
+  FORMAL_SOURCES  formal/barrel_shifter_formal.sv
+  FORMAL_DEPTH    2
 )

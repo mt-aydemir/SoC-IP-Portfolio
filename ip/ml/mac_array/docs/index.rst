@@ -203,6 +203,10 @@ Verification
        signed weights, and the narrowest legal accumulator, so long vectors
        wrap: 3000 vectors of 1 to 40 beats against a 64-bit reference,
        with gaps and back-pressure.
+   * - ``formal/mac_array_formal.sv``
+     - Complete k-induction equivalence proof at ``LANES=2``: every
+       result is its vector's dot product, in order, with the credit flow
+       control and the latency.
 
 .. code-block:: bash
 

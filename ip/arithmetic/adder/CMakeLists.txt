@@ -13,4 +13,7 @@ add_ip(
   COCOTB_MODULES  test_adder
   PARAMS          WIDTH=16 SIGNED=1 SATURATE=1
   NO_STA
+  FORMAL_TOP      adder_formal
+  FORMAL_SOURCES  formal/adder_formal.sv
+  FORMAL_DEPTH    2
 )

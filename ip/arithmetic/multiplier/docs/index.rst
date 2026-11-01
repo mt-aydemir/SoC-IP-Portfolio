@@ -259,6 +259,10 @@ Verification
      - Portable self-checking testbench driven from an in-order queue of
        expected products, which checks pipeline ordering and latency as well
        as arithmetic, with an exhaustive 8x8 sweep.
+   * - ``formal/multiplier_formal.sv``
+     - Proof, for every input sequence from reset, that an 8 x 6
+       multiplier with two stages, signed and unsigned, presents the
+       exact product and valid of the inputs two cycles earlier.
 
 .. code-block:: bash
 

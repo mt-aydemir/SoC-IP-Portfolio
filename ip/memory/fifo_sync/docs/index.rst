@@ -239,6 +239,10 @@ Verification
        16, 5 and 2.
    * - ``tb/tb_fifo_sync.sv``
      - Portable self-checking smoke test with a continuous level-bound check.
+   * - ``formal/fifo_sync_formal.sv``
+     - k-induction proof at ``DEPTH=5``: every word leaves once and in
+       order, level and all four flags are exact, nothing is accepted while
+       full, and a waiting word holds.
 
 .. code-block:: bash
 

@@ -193,6 +193,10 @@ Verification
      - Independent AW, W and AR driver processes with random delays,
        random B and R back-pressure, and a register block with wait states
        and an error word; 3000 operations.
+   * - ``formal/axi4_lite_slave_formal.sv``
+     - k-induction proof against an AXI4-Lite manager: pairing of
+       AW, W and AR with their requests, one response each, SLVERR and read
+       data, hold, and read/write alternation.
 
 .. code-block:: bash
 

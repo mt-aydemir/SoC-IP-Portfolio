@@ -13,4 +13,7 @@ add_ip(
   CLOCK_PORT      clk
   STA_SDC         scripts/fifo_sync.sdc
   SDC_INST_VAR    FIFO_INST
+  FORMAL_TOP      fifo_sync_formal
+  FORMAL_DEPTH    10
+  FORMAL_SOURCES  formal/fifo_sync_formal.sv
 )

@@ -13,6 +13,7 @@ IP that fails any stage does not ship.
 | **Targets** | FPGA and ASIC — no vendor primitives, no vendor attributes |
 | **Lint** | Verilator `-Wall`, zero warnings tolerated |
 | **Simulation** | cocotb, plus a self-checking SystemVerilog testbench per IP |
+| **Formal** | SymbiYosys k-induction proofs for twelve blocks |
 | **Synthesis** | Yosys, mapped to a generic reference standard cell library |
 | **Timing** | OpenSTA on the mapped netlist |
 | **Build** | CMake + Ninja, strictly out of source |
@@ -60,6 +61,7 @@ cmake --build build --target lint-all     # Verilator lint, every IP
 cmake --build build --target sim-all      # full simulation regression
 cmake --build build --target synth-all    # Yosys synthesis, every IP
 cmake --build build --target sta-all      # OpenSTA timing, every IP
+cmake --build build --target formal-all   # SymbiYosys proofs
 cmake --build build --target docs         # Sphinx HTML documentation
 
 ctest --test-dir build -L memory          # one category
@@ -90,16 +92,17 @@ is that the dependency stays there. Nothing under `ip/` knows what a Zynq is.
 
 ## The flow
 
-Each IP passes through four stages. They are wired as CTest fixtures, so the
-ordering is enforced by the test runner rather than by convention: an IP is
-only simulated once it lints clean, only synthesised once it simulates clean,
-and only timed once it synthesises clean.
+Each IP passes through the same stages. They are wired as CTest fixtures, so
+the ordering is enforced by the test runner rather than by convention: an IP
+is only simulated once it lints clean, only synthesised once it simulates
+clean, and only timed once it synthesises clean.
 
 | Stage | Tool | Pass criterion |
 |---|---|---|
 | Lint | Verilator `--lint-only` | Zero errors **and** zero warnings under `-Wall` |
 | Simulation | cocotb + Verilator | Every testcase passes, and at least one ran |
 | Smoke test | Verilator `--binary` | Exits zero and prints `TEST PASSED` |
+| Formal | SymbiYosys + Z3 | Every assertion proved by k-induction, every cover reached |
 | Synthesis | Yosys | Maps to the generic cell library without errors |
 | Timing | OpenSTA | Worst setup and hold slack both non-negative |
 
@@ -114,6 +117,7 @@ ip/<category>/<ip_name>/
 ├── rtl/           synthesisable SystemVerilog, one module per file
 ├── tb/            self-checking SystemVerilog testbench
 ├── cocotb/        Python test modules: directed, randomised, regression
+├── formal/        property wrapper for SymbiYosys, where the block has one
 ├── docs/          functional description, diagrams, parameter and port tables
 ├── scripts/       timing constraints and per-IP helpers
 ├── README.md      overview, interface summary, quick start

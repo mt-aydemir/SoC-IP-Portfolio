@@ -11,6 +11,22 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **A formal stage: SymbiYosys proofs for twelve blocks.** `add_ip(FORMAL_TOP
+  ...)` registers `formal.<category>.<name>`, which proves every assertion
+  in the block's property wrapper by k-induction and requires every cover
+  to be reached, so a proof under assumptions that exclude the interesting
+  behaviour fails. Wrappers constrain inputs to the interface protocol,
+  check results at the ports against references written from the headers,
+  and reach internal state through probe wires that `run_formal.py` joins
+  to the flattened design, since the free Yosys frontend has no
+  hierarchical references; the RTL carries no formal code. Proved: the
+  five combinational arithmetic blocks by exhaustive equivalence, the
+  multiplier pipeline, `fifo_sync` (order, level, flags), all five
+  `axi4_stream_slice` modes, both `apb_slave` modes, `axi4_lite_slave`,
+  `mac_array` (complete equivalence with its flow control) and `lfsr_rng`.
+  A mutation campaign of 26 bugs failed every proof. The no-root setup gets
+  SymbiYosys from yowasp-yosys and Z3 from the z3-solver wheel; the stage
+  takes about 30 seconds.
 - **`ml/mac_array`, the last block of the original tree.** A pipelined
   dot-product engine: `LANES` exact products per cycle, any mix of signed
   and unsigned operands (uint8 activations against int8 weights included),

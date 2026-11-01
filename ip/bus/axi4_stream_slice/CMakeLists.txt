@@ -14,4 +14,7 @@ add_ip(
   CLOCK_PERIOD_NS 5.0
   CLOCK_PORT      clk
   STA_SDC         scripts/axi4_stream_slice.sdc
+  FORMAL_TOP      axi4_stream_slice_formal
+  FORMAL_SOURCES  formal/axi4_stream_slice_formal.sv
+  FORMAL_DEPTH    8
 )

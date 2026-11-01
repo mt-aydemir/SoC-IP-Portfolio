@@ -237,6 +237,10 @@ Verification
      - Portable self-checking testbench: the directed corners, an exhaustive
        sweep at ``WIDTH=8`` and randomised vectors, against an independent
        reference model.
+   * - ``formal/adder_formal.sv``
+     - Exhaustive equivalence proof at ``WIDTH=16``: all four configurations
+       against the header's overflow and saturation rules written as
+       integer arithmetic on a wider sum.
 
 The reference models in both suites are written from the specification in the
 RTL header rather than from its body, so a mistake copied out of the design

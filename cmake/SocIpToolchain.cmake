@@ -82,6 +82,26 @@ if(SOC_IP_STA)
 endif()
 
 #-----------------------------------------------------------------------------
+# SymbiYosys and an SMT solver - formal verification
+#
+# The no-root setup has SymbiYosys as yowasp-sby, which ships with
+# yowasp-yosys, and Z3 from the z3-solver wheel, which carries a native z3
+# binary; both land in the venv. A native sby and any solver smtbmc accepts
+# work as well.
+#-----------------------------------------------------------------------------
+get_filename_component(_py_bin "${SOC_IP_PYTHON}" DIRECTORY)
+find_program(SOC_IP_SBY NAMES sby yowasp-sby HINTS "${_py_bin}")
+find_program(SOC_IP_SMT_SOLVER NAMES z3 yices-smt2 boolector bitwuzla HINTS "${_py_bin}")
+set(SOC_IP_FORMAL_STATUS "not found")
+if(SOC_IP_SBY AND SOC_IP_SMT_SOLVER)
+  get_filename_component(SOC_IP_SMT_SOLVER_NAME "${SOC_IP_SMT_SOLVER}" NAME)
+  string(REGEX REPLACE "-smt2$" "" SOC_IP_SMT_SOLVER_NAME "${SOC_IP_SMT_SOLVER_NAME}")
+  set(SOC_IP_FORMAL_STATUS "${SOC_IP_SBY} + ${SOC_IP_SMT_SOLVER_NAME}")
+elseif(SOC_IP_SBY)
+  set(SOC_IP_FORMAL_STATUS "${SOC_IP_SBY}, no SMT solver")
+endif()
+
+#-----------------------------------------------------------------------------
 # Sphinx - documentation
 #-----------------------------------------------------------------------------
 get_filename_component(_py_dir "${SOC_IP_PYTHON}" DIRECTORY)
@@ -101,3 +121,4 @@ set(SOC_IP_RUN_LINT   "${SOC_IP_SCRIPT_DIR}/run_lint.py"       CACHE INTERNAL ""
 set(SOC_IP_RUN_SVTB   "${SOC_IP_SCRIPT_DIR}/run_svtb.py"       CACHE INTERNAL "")
 set(SOC_IP_RUN_SYNTH  "${SOC_IP_SCRIPT_DIR}/run_synth.py"      CACHE INTERNAL "")
 set(SOC_IP_RUN_STA    "${SOC_IP_SCRIPT_DIR}/run_sta.py"        CACHE INTERNAL "")
+set(SOC_IP_RUN_FORMAL "${SOC_IP_SCRIPT_DIR}/run_formal.py"     CACHE INTERNAL "")

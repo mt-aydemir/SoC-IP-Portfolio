@@ -13,4 +13,7 @@ add_ip(
   COCOTB_MODULES  test_comparator
   PARAMS          WIDTH=16 SIGNED=1
   NO_STA
+  FORMAL_TOP      comparator_formal
+  FORMAL_SOURCES  formal/comparator_formal.sv
+  FORMAL_DEPTH    2
 )

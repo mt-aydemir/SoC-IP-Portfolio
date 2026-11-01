@@ -223,6 +223,9 @@ Verification
      - Portable self-checking testbench: the directed corners, every adjacent
        pair, an exhaustive sweep at ``WIDTH=8`` and randomised vectors, with
        trichotomy checked on every vector.
+   * - ``formal/comparator_formal.sv``
+     - Exhaustive equivalence proof at ``WIDTH=16``: all six outputs,
+       signed and unsigned, against the relational operators.
 
 Both reference models decode the operands into a wider integer once and then
 compare ordinarily, which is a different route to the answer than the

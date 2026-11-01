@@ -14,4 +14,7 @@ add_ip(
   CLOCK_PERIOD_NS 5.0
   CLOCK_PORT      clk
   STA_SDC         scripts/apb_slave.sdc
+  FORMAL_TOP      apb_slave_formal
+  FORMAL_SOURCES  formal/apb_slave_formal.sv
+  FORMAL_DEPTH    10
 )

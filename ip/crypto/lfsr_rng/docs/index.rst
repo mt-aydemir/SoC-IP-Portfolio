@@ -166,6 +166,10 @@ Verification
        ``STEPS`` > 1. A ``WIDTH`` = 20, ``STEPS`` = 5 instance is compared
        draw for draw with a bit-serial model under back-pressure and random
        reseeding.
+   * - ``formal/lfsr_rng_formal.sv``
+     - k-induction proof at ``WIDTH=8 STEPS=3``: equivalence with a
+       bit-serial model of the recurrence, seeding and stalls included; the
+       state never reaches zero.
 
 .. code-block:: bash
 

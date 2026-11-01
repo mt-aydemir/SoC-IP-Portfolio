@@ -64,6 +64,10 @@ endfunction()
 #   SVTB            self-checking SystemVerilog testbench source, relative to
 #                   the IP directory; compiled with `verilator --binary`
 #   SVTB_TOP        testbench top module          (default: SVTB file stem)
+#   FORMAL_TOP      property wrapper module; registers formal.<cat>.<name>,
+#                   which proves every assertion with SymbiYosys (k-induction)
+#                   and requires every cover statement to be reached
+#   FORMAL_DEPTH    induction and cover depth                    (default: 20)
 #
 # Multi-value:
 #   SOURCES         RTL files, relative to the IP directory         (required)
@@ -76,13 +80,16 @@ endfunction()
 #                   "SYNC_DST=[get_clocks clk]"
 #   SDC_CLOCKS      further clock ports for the check-only test; CLOCK_PORT
 #                   is always the first
+#   FORMAL_SOURCES  property wrapper files, relative to the IP directory
+#   FORMAL_PARAMS   NAME=VALUE parameters of FORMAL_TOP; PARAMS do not apply,
+#                   since proofs run at small configurations of their own
 #-----------------------------------------------------------------------------
 function(add_ip)
   set(_opts    NO_LINT NO_SIM NO_SYNTH NO_STA)
   set(_one     NAME TOP CATEGORY CLOCK_PERIOD_NS CLOCK_PORT TIMESCALE SVTB SVTB_TOP
-               STA_SDC SDC_INST_VAR)
+               STA_SDC SDC_INST_VAR FORMAL_TOP FORMAL_DEPTH)
   set(_multi   SOURCES DEPENDS COCOTB_MODULES PARAMS LINT_ARGS SYNTH_ARGS
-               SDC_VARS SDC_CLOCKS)
+               SDC_VARS SDC_CLOCKS FORMAL_SOURCES FORMAL_PARAMS)
   cmake_parse_arguments(IP "${_opts}" "${_one}" "${_multi}" ${ARGN})
 
   if(NOT IP_NAME)
@@ -283,6 +290,64 @@ function(add_ip)
       TIMEOUT ${SOC_IP_SIM_TIMEOUT}
       FIXTURES_REQUIRED F_lint_${IP_NAME}
       FIXTURES_SETUP    F_sim_${IP_NAME})
+  endif()
+
+  #---------------------------------------------------------------------------
+  # Stage 2c: formal proof (SymbiYosys)
+  #
+  # The wrapper instantiates the block, constrains its inputs to the
+  # interface protocol with assumptions, and states its guarantees as
+  # assertions and its reachable behaviour as covers. The RTL is read with
+  # SYNTHESIS defined, so its simulation-only assertions - which use SVA
+  # constructs the free Yosys frontend does not parse - stay out; every
+  # property the proof relies on is in the wrapper.
+  #---------------------------------------------------------------------------
+  if(SOC_IP_ENABLE_FORMAL AND SOC_IP_SBY AND SOC_IP_SMT_SOLVER AND IP_FORMAL_TOP)
+    if(NOT IP_FORMAL_DEPTH)
+      set(IP_FORMAL_DEPTH 20)
+    endif()
+    set(_formal_srcs "")
+    foreach(_s IN LISTS IP_FORMAL_SOURCES)
+      set(_abs "${CMAKE_CURRENT_SOURCE_DIR}/${_s}")
+      if(NOT EXISTS "${_abs}")
+        message(FATAL_ERROR "add_ip(${IP_NAME}): missing formal source ${_abs}")
+      endif()
+      list(APPEND _formal_srcs "${_abs}")
+    endforeach()
+    set(_formal_params "")
+    foreach(_p IN LISTS IP_FORMAL_PARAMS)
+      list(APPEND _formal_params --param "${_p}")
+    endforeach()
+
+    set(_formal_cmd
+      "${SOC_IP_PYTHON}" "${SOC_IP_RUN_FORMAL}"
+        --sby      "${SOC_IP_SBY}"
+        --solver   "${SOC_IP_SMT_SOLVER_NAME}"
+        --top      "${IP_FORMAL_TOP}"
+        --name     "${IP_NAME}"
+        --depth    "${IP_FORMAL_DEPTH}"
+        --out-dir  "${_out}/formal"
+        --report   "${SOC_IP_REPORT_OUT}/formal/${IP_NAME}.log"
+        ${_formal_params}
+        --sources  ${_all_srcs} ${_formal_srcs})
+
+    add_custom_target(formal_${IP_NAME}
+      COMMAND ${_formal_cmd}
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+      COMMENT "[formal] ${IP_CATEGORY}/${IP_NAME}"
+      VERBATIM)
+    add_dependencies(formal-all formal_${IP_NAME})
+
+    add_test(NAME formal.${IP_CATEGORY}.${IP_NAME}
+             COMMAND ${_formal_cmd}
+             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
+    set_tests_properties(formal.${IP_CATEGORY}.${IP_NAME} PROPERTIES
+      LABELS "formal;${IP_CATEGORY}"
+      TIMEOUT ${SOC_IP_FORMAL_TIMEOUT})
+    if(SOC_IP_ENABLE_LINT AND SOC_IP_VERILATOR AND NOT IP_NO_LINT)
+      set_tests_properties(formal.${IP_CATEGORY}.${IP_NAME} PROPERTIES
+        FIXTURES_REQUIRED F_lint_${IP_NAME})
+    endif()
   endif()
 
   #---------------------------------------------------------------------------

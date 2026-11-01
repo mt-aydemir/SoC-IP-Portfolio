@@ -14,4 +14,7 @@ add_ip(
   COCOTB_MODULES  test_alu
   PARAMS          WIDTH=32
   NO_STA
+  FORMAL_TOP      alu_formal
+  FORMAL_SOURCES  formal/alu_formal.sv
+  FORMAL_DEPTH    2
 )
