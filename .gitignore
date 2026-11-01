@@ -1,0 +1,49 @@
+# =============================================================================
+# soc-ip-portfolio
+#
+# Rule: every generated file lives under build/. Anything listed below that is
+# not under build/ indicates a flow was run from the wrong working directory;
+# `ctest -R repo.no_source_pollution` turns that into a hard failure.
+# =============================================================================
+
+# --- build tree --------------------------------------------------------------
+/build/
+build-*/
+cmake-build-*/
+
+# --- EDA tool debris ---------------------------------------------------------
+obj_dir/
+sim_build/
+*.vcd
+*.fst
+*.ghw
+*.vpd
+*.wlf
+*.jou
+*.blif
+*.edif
+*.mapped.v
+*.netlist.json
+results.xml
+verilator.log
+yosys.log
+
+# --- Python ------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# --- documentation -----------------------------------------------------------
+docs/_build/
+docs/source/api/
+
+# --- editors and OS ----------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db

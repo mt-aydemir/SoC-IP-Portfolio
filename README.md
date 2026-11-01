@@ -1,59 +1,155 @@
-# SoC-IP-Portfolio
+# SoC IP Portfolio
 
-SystemVerilog ile yazılmış, yeniden kullanılabilir küçük RTL IP blokları ve
-her blok için cocotb + Verilator tabanlı testbench'ler.
+A vendor-independent SystemVerilog IP library for FPGA and ASIC development.
 
-Amaç: her modülü "yazdım" değil **"yazdım ve doğruladım"** seviyesinde tutmak.
+Every block is written to the same standard: synthesisable SystemVerilog-2017,
+fully parameterised, free of vendor primitives, and verified by a flow that
+runs lint, simulation, synthesis and static timing analysis in that order. An
+IP that fails any stage does not ship.
 
-## Modüller ve doğrulama durumu
+| | |
+|---|---|
+| **Language** | SystemVerilog-2017, synthesisable subset |
+| **Targets** | FPGA and ASIC — no vendor primitives, no vendor attributes |
+| **Lint** | Verilator `-Wall`, zero warnings tolerated |
+| **Simulation** | cocotb, plus a self-checking SystemVerilog testbench per IP |
+| **Synthesis** | Yosys, mapped to a generic reference standard cell library |
+| **Timing** | OpenSTA on the mapped netlist |
+| **Build** | CMake + Ninja, strictly out of source |
+| **Licence** | Apache-2.0 |
 
-| Modül | Dosya | Test | Durum |
-| --- | --- | --- | --- |
-| Adder | `arithmetic/adder.sv` | `tb/test_adder.py` | ✅ PASS |
-| Multiplier | `arithmetic/multiplier.sv` | `tb/test_multiplier.py` | ✅ PASS |
-| MAC | `arithmetic/mac.sv` | `tb/test_mac.py` | ✅ PASS |
-| CORDIC | `arithmetic/cordic.sv` | — | ⚠️ Taslak (bkz. Bilinen sorunlar) |
-| Sync FIFO | `memory/fifo_sync.sv` | `tb/test_fifo_sync.py` | ✅ PASS |
-| Register file | `memory/register_file.sv` | `tb/test_register_file.py` | ✅ PASS |
-| GPIO | `peripherals/gpio.sv` | `tb/test_gpio.py` | ✅ PASS |
-| UART | `peripherals/uart.sv` | `tb/test_uart.py` | ✅ PASS (RX hatası düzeltildi) |
-| SPI master | `peripherals/spi.sv` (`spi_master`) | `tb/test_spi.py` | ⚠️ Veri yolu PASS, SCLK kenar hatası açık |
+## Catalogue
 
-## Testleri çalıştırma
+33 IP blocks, each passing every stage of the flow, plus two integration
+examples. Categories marked *planned* are registered in the build order but
+not yet implemented.
 
-Gerekli: Verilator + cocotb (1.9.x).
+```
+ip/
+├── cdc/          sync_2ff  reset_sync  pulse_sync  handshake
+├── clocking/     clk_divider  clk_gate  clk_mux  reset_controller
+├── memory/       register_file  ram_sp  ram_sdp  ram_dp  fifo_sync
+│                 fifo_async  bram_ctrl
+├── arithmetic/   adder  subtractor  comparator  barrel_shifter  multiplier
+│                 accumulator  mac  alu  divider  cordic
+├── ml/           systolic_pe  systolic_array  requant_int8  cnn_accel
+├── peripherals/  gpio  uart  spi_master  i2c_master
+├── bus/          planned: axi4_lite_slave  axi4_stream  apb_slave
+├── dsp/          planned: fir  iir  fft  cic
+└── crypto/       planned: aes128  sha256  lfsr_rng
 
-```bash
-cd tb
-# kullanim: python run.py <toplevel> <test_modulu> <kaynak.sv> [PARAM=deger ...]
-python run.py adder         test_adder         ../arithmetic/adder.sv
-python run.py mac           test_mac           ../arithmetic/mac.sv
-python run.py fifo_sync     test_fifo_sync     ../memory/fifo_sync.sv
-python run.py register_file test_register_file ../memory/register_file.sv
-python run.py gpio          test_gpio          ../peripherals/gpio.sv
-python run.py uart          test_uart          ../peripherals/uart.sv CLK_FREQ=8 BAUD_RATE=1
-python run.py spi_master    test_spi           ../peripherals/spi.sv
+examples/         nco (accumulator + cordic)
+                  cdc_stream_bridge (reset_sync + fifo_async)
 ```
 
-## Bilinen sorunlar
+## Quick start
 
-- **CORDIC (taslak):** Açı tablosu 16 iterasyon için ama yalnızca 9 değer dolu
-  (gerisi 0). Açı sabitleri (`32'h2_C8CB_F0E8` vb.) 32 biti aşıyor ve truncate
-  oluyor. Sabit nokta formatı belgelenmemiş. Düzgün testbench için önce format
-  ve açı tablosunun netleştirilmesi gerekiyor.
-- **SPI master – SCLK kenar sayısı:** 8 bitlik aktarımda yalnızca 7 SCLK
-  yükselen kenarı üretiliyor; son örnekleme cevriminde `sclk <= ~sclk` ile
-  `sclk <= CPOL` çakışıyor ve son kenar bastırılıyor. Master kendi RX'ini FSM
-  olayından örneklediği için içi doğru, ama gerçek bir slave son biti kaçırır.
-  `tb/test_spi.py::test_spi_master_sclk_edges` bu hatayı sabitliyor.
-- **SPI slave – çok sürücü:** `rx_shift`, `tx_shift`, `miso` sinyalleri birden
-  fazla always bloğunda sürülüyor; temiz sentezlenebilir RTL değil, elden
-  geçirilmesi gerekiyor.
-- **GPIO – giriş okuma yok:** `pin_in` girişi modülde hiç kullanılmıyor; giriş
-  pinlerini okuma yolu yok (yalnızca çıkış + yön).
+The flow runs inside WSL2 on Ubuntu 24.04 LTS.
 
-## Yol haritası (henüz yok)
+```bash
+./scripts/setup_env.sh                    # toolchain, venv, OpenSTA
+export SOC_IP_VENV="$HOME/.venvs/soc-ip-portfolio"
+cmake -S . -B build -G Ninja
+ctest --test-dir build --output-on-failure
+```
 
-Aşağıdaki bloklar planlı, henüz uygulanmadı: bus (AXI4-Lite, AXI4-Stream, APB),
-DSP (FIR, IIR, FFT, CIC), ML (systolic array, PE), crypto (AES-128, SHA-256).
-Formal doğrulama (SymbiYosys) FIFO ve adder için eklenecek.
+Useful targets and filters:
+
+```bash
+cmake --build build --target lint-all     # Verilator lint, every IP
+cmake --build build --target sim-all      # full simulation regression
+cmake --build build --target synth-all    # Yosys synthesis, every IP
+cmake --build build --target sta-all      # OpenSTA timing, every IP
+cmake --build build --target docs         # Sphinx HTML documentation
+
+ctest --test-dir build -L memory          # one category
+ctest --test-dir build -R 'sim\..*fifo'   # one IP
+ctest --test-dir build -j "$(nproc)"      # in parallel
+```
+
+## Repository layout
+
+```
+ip/            the IP catalogue, one directory per block
+verification/  shared cocotb library: clocking, scoreboards, stimulus, BFMs
+sw/            host and embedded software for the IPs that need a driver
+fpga/          vendor integration: IP packaging and reference designs
+docs/          Sphinx sources for the hand-written guides
+examples/      integration examples wiring several IPs together
+scripts/       flow drivers (lint, sim, synth, sta) and generators
+templates/     the IP skeleton used by scripts/new_ip.py
+tests/         repository-level structure, style and pollution checks
+cmake/         add_ip() and toolchain discovery
+build/         every generated file, without exception
+```
+
+`sw/` and `fpga/` are outside the vendor-independence rule that governs `ip/`,
+and deliberately so: an IP that needs a driver needs one written against a real
+processor, and a design that needs to be built needs a real toolchain. The rule
+is that the dependency stays there. Nothing under `ip/` knows what a Zynq is.
+
+## The flow
+
+Each IP passes through four stages. They are wired as CTest fixtures, so the
+ordering is enforced by the test runner rather than by convention: an IP is
+only simulated once it lints clean, only synthesised once it simulates clean,
+and only timed once it synthesises clean.
+
+| Stage | Tool | Pass criterion |
+|---|---|---|
+| Lint | Verilator `--lint-only` | Zero errors **and** zero warnings under `-Wall` |
+| Simulation | cocotb + Verilator | Every testcase passes, and at least one ran |
+| Smoke test | Verilator `--binary` | Exits zero and prints `TEST PASSED` |
+| Synthesis | Yosys | Maps to the generic cell library without errors |
+| Timing | OpenSTA | Worst setup and hold slack both non-negative |
+
+Nothing is ever written into the source tree. Three independent mechanisms
+enforce that, the last of which is a regression test that fails the build if a
+waveform, netlist or log appears anywhere outside `build/`.
+
+## Every IP contains
+
+```
+ip/<category>/<ip_name>/
+├── rtl/           synthesisable SystemVerilog, one module per file
+├── tb/            self-checking SystemVerilog testbench
+├── cocotb/        Python test modules: directed, randomised, regression
+├── docs/          functional description, diagrams, parameter and port tables
+├── scripts/       timing constraints and per-IP helpers
+├── README.md      overview, interface summary, quick start
+├── LICENSE        Apache-2.0
+├── CHANGELOG.md   independently versioned, Keep a Changelog format
+└── CMakeLists.txt a single add_ip() call
+```
+
+`ctest -L repo` enforces that layout, the RTL house style and the
+no-pollution rule on every change.
+
+## Adding an IP
+
+```bash
+python scripts/new_ip.py --category memory --name cache_line_buffer
+```
+
+This copies the template, renames every file and identifier, and registers the
+block with the build. What it generates already passes the full regression, so
+the starting point is a working IP rather than an empty directory.
+
+## Documentation
+
+```bash
+cmake --build build --target docs
+xdg-open build/docs/html/index.html
+```
+
+The guides cover [getting started](docs/source/getting_started.rst), the
+[build flow](docs/source/build_flow.rst), the
+[coding style](docs/source/coding_style.rst), the
+[verification methodology](docs/source/verification.rst) and the
+[integration rules](docs/source/integration.rst) — including the clock domain
+crossing rules that are the most common source of bugs simulation does not
+catch.
+
+## Licence
+
+Apache-2.0. See [LICENSE](LICENSE).

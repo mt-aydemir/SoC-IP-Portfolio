@@ -1,0 +1,3 @@
+# The flow runs under WSL/Linux: keep LF everywhere, whatever core.autocrlf
+# says on a Windows checkout. A CRLF shell script fails on `set -o pipefail`.
+* text=auto eol=lf

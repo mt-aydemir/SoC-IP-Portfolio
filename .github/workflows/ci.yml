@@ -1,0 +1,155 @@
+#=============================================================================
+# Continuous integration for the SoC IP portfolio.
+#
+# Mirrors exactly what a developer runs locally: configure with CMake, then
+# let CTest drive the ordered lint -> simulation -> synthesis -> timing flow.
+# There is no CI-only build path, so a green pipeline means the same thing as
+# a green local run.
+#=============================================================================
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SOC_IP_VENV: ${{ github.workspace }}/.venv
+
+jobs:
+  #---------------------------------------------------------------------------
+  # Fast feedback: repository conventions, no EDA tools required.
+  #---------------------------------------------------------------------------
+  conventions:
+    name: Structure, style and pollution
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check repository conventions
+        run: |
+          python tests/test_repo_structure.py --root .
+          python tests/test_rtl_style.py --root .
+          python tests/test_no_source_pollution.py --root .
+
+  #---------------------------------------------------------------------------
+  # The full flow.
+  #---------------------------------------------------------------------------
+  regression:
+    name: Lint, simulate, synthesise, time
+    runs-on: ubuntu-24.04
+    needs: conventions
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install EDA toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build \
+            verilator yosys \
+            tcl-dev swig bison flex libeigen3-dev zlib1g-dev \
+            graphviz
+
+      - name: Cache OpenSTA
+        id: cache-sta
+        uses: actions/cache@v4
+        with:
+          path: ~/.local
+          key: opensta-v2.6.0-ubuntu24.04
+
+      - name: Build OpenSTA
+        if: steps.cache-sta.outputs.cache-hit != 'true'
+        run: ./scripts/setup_env.sh --no-sudo --no-venv
+
+      - name: Python environment
+        run: |
+          python -m venv "$SOC_IP_VENV"
+          "$SOC_IP_VENV/bin/python" -m pip install --upgrade --quiet pip
+          "$SOC_IP_VENV/bin/python" -m pip install --quiet \
+            "cocotb>=1.9,<2.0" cocotb-bus pytest sphinx sphinx-rtd-theme \
+            myst-parser numpy pyyaml
+
+      - name: Configure
+        run: |
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          cmake -S . -B build -G Ninja -DSOC_IP_WAVES=OFF
+
+      - name: Regression
+        run: ctest --test-dir build --output-on-failure -j "$(nproc)"
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: build/reports/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  #---------------------------------------------------------------------------
+  # Host-side driver software.
+  #
+  # The accelerator driver's lowering, tiling and quantisation are the part of
+  # the stack the RTL regression cannot reach - the hardware has never heard of
+  # a convolution - so they have their own self-test, and it runs with the
+  # system compiler against a software model rather than needing a board.
+  #---------------------------------------------------------------------------
+  software:
+    name: Driver self-test
+    runs-on: ubuntu-24.04
+    needs: conventions
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and run the cnn_accel driver self-test
+        run: make -C sw/cnn_accel test
+
+  #---------------------------------------------------------------------------
+  # Documentation must build with warnings as errors.
+  #---------------------------------------------------------------------------
+  docs:
+    name: Documentation
+    runs-on: ubuntu-24.04
+    needs: conventions
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake ninja-build graphviz
+          python -m venv "$SOC_IP_VENV"
+          "$SOC_IP_VENV/bin/python" -m pip install --upgrade --quiet pip
+          "$SOC_IP_VENV/bin/python" -m pip install --quiet \
+            sphinx sphinx-rtd-theme myst-parser
+
+      - name: Build documentation
+        run: |
+          cmake -S . -B build -G Ninja
+          cmake --build build --target docs
+
+      - name: Upload HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: build/docs/html/
+          retention-days: 14
