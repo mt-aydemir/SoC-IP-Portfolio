@@ -14,4 +14,7 @@ add_ip(
   CLOCK_PERIOD_NS 10.0
   CLOCK_PORT      clk
   NO_STA
+  STA_SDC         scripts/clk_gate.sdc
+  SDC_INST_VAR    GATE_INST
+  SDC_VARS        "GATE_SRC_CLK=[get_clocks clk]"
 )

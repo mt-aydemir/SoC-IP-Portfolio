@@ -3,8 +3,11 @@
 #
 # Usage from the integrating project:
 #
-#   set RAM_INST [get_cells u_mem]
+#   set RAM_INST u_mem
 #   source ip/memory/ram_sp/scripts/ram_sp.sdc
+#
+# RAM_INST is the instance's hierarchical name, not a cell object. Only
+# commands common to OpenSTA, Synopsys tools and Vivado are used.
 #
 # Copyright (c) 2026 SoC IP Portfolio Contributors
 # SPDX-License-Identifier: Apache-2.0

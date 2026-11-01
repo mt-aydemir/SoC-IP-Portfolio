@@ -21,4 +21,6 @@ add_ip(
   CLOCK_PERIOD_NS 5.0
   CLOCK_PORT      clk
   NO_STA
+  STA_SDC         scripts/bram_ctrl.sdc
+  SDC_INST_VAR    CTRL_INST
 )

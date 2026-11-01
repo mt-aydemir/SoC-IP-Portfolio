@@ -11,4 +11,6 @@ add_ip(
   PARAMS          NUM_STAGES=4 STAGE_DELAY=4 MIN_ASSERT_CYCLES=16 SYNC_STAGES=3
   CLOCK_PERIOD_NS 10.0
   CLOCK_PORT      clk
+  STA_SDC         scripts/reset_controller.sdc
+  SDC_INST_VAR    RSTCTL_INST
 )

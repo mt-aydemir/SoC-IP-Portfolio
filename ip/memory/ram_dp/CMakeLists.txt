@@ -11,6 +11,10 @@
 #
 # NO_STA: two independent clock inputs, as for ram_sdp.
 #=============================================================================
+# No STA_SDC either: Yosys leaves the two-clock write array behavioural, so
+# the netlist is not one OpenSTA can read. The fragment's only executable
+# part is the clock-group declaration it shares with ram_sdp, which is
+# checked there.
 add_ip(
   NAME            ram_dp
   TOP             ram_dp

@@ -254,8 +254,8 @@ Integration notes
 -----------------
 
 * ``clk_out`` is a generated clock derived from *both* sources. Declare both
-  derivations and put the two source clocks in asynchronous clock groups; see
-  ``scripts/clk_mux.sdc``.
+  derivations, with ``-master_clock``, as logically exclusive, and bound the
+  paths between the two sources; see ``scripts/clk_mux.sdc``.
 * Each branch needs a reset released synchronously to its own clock. Use one
   ``cdc_reset_sync`` per branch.
 * Downstream logic sees a clock that stops for the duration of the changeover.

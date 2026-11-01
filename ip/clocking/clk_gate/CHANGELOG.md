@@ -8,6 +8,13 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/clk_gate.sdc` now uses only commands common to OpenSTA, Synopsys
+  tools and Vivado, and takes the instance as a hierarchical name.
+- The enable and `test_en` constraints go through nets rather than to
+  hierarchical input pins.
+
 ## [1.0.0] - 2026-07-30
 
 ### Added

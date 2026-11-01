@@ -8,6 +8,13 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/fifo_sync.sdc` now uses only commands common to OpenSTA, Synopsys
+  tools and Vivado, and takes the instance as a hierarchical name.
+- The max-delays on the `s_ready` and `m_valid` pins constrained the
+  integrator's logic beyond the block; they are path groups now.
+
 ## [1.0.0] - 2026-07-30
 
 ### Added

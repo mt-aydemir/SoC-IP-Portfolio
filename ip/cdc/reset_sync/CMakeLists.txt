@@ -15,4 +15,6 @@ add_ip(
   CLOCK_PERIOD_NS 10.0
   CLOCK_PORT      clk
   NO_STA
+  STA_SDC         scripts/cdc_reset_sync.sdc
+  SDC_INST_VAR    RST_SYNC_INST
 )

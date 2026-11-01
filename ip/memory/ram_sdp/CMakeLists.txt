@@ -15,4 +15,8 @@ add_ip(
   CLOCK_PERIOD_NS 5.0
   CLOCK_PORT      wr_clk
   NO_STA
+  STA_SDC         scripts/ram_sdp.sdc
+  SDC_INST_VAR    RAM_INST
+  SDC_VARS        "RAM_WR_CLK=[get_clocks wr_clk]" "RAM_RD_CLK=[get_clocks rd_clk]"
+  SDC_CLOCKS      rd_clk
 )

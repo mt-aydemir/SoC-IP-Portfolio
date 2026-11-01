@@ -15,4 +15,5 @@ add_ip(
   PARAMS          DATA_BITS=8 PARITY=1 STOP_BITS=1 DIV_WIDTH=16 SYNC_STAGES=2
   CLOCK_PERIOD_NS 5.0
   CLOCK_PORT      clk
+  STA_SDC         scripts/uart.sdc
 )

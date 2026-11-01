@@ -3,14 +3,35 @@
 #
 # Usage from the integrating project:
 #
-#   set RAM_INST [get_cells u_storage]
+#   set RAM_INST u_storage
 #   set RAM_WR_CLK [get_clocks clk_wr]
 #   set RAM_RD_CLK [get_clocks clk_rd]
 #   source ip/memory/ram_sdp/scripts/ram_sdp.sdc
 #
+# RAM_INST is the instance's hierarchical name, not a cell object. Only
+# commands common to OpenSTA, Synopsys tools and Vivado are used.
+#
 # Copyright (c) 2026 SoC IP Portfolio Contributors
 # SPDX-License-Identifier: Apache-2.0
 #=============================================================================
+
+#-----------------------------------------------------------------------------
+# A clock's name, which the tools read as differently as its period.
+#-----------------------------------------------------------------------------
+if {[llength [info procs socip_clock_name]] == 0} {
+    proc socip_clock_name {clk} {
+        foreach cmd {
+            {get_property $clk name}
+            {get_property NAME $clk}
+            {get_object_name $clk}
+        } {
+            if {![catch $cmd n] && $n ne ""} {
+                return $n
+            }
+        }
+        error "socip_clock_name: cannot read the name of $clk"
+    }
+}
 
 if {![info exists RAM_INST]} {
     puts "ram_sdp.sdc: RAM_INST is not set; nothing to constrain"
@@ -24,7 +45,7 @@ if {![info exists RAM_INST]} {
 # itself removes real timing checks.
 #-----------------------------------------------------------------------------
 if {[info exists RAM_WR_CLK] && [info exists RAM_RD_CLK]} {
-    if {[get_property $RAM_WR_CLK name] ne [get_property $RAM_RD_CLK name]} {
+    if {[socip_clock_name $RAM_WR_CLK] ne [socip_clock_name $RAM_RD_CLK]} {
         set_clock_groups -asynchronous -group $RAM_WR_CLK -group $RAM_RD_CLK
     }
 }

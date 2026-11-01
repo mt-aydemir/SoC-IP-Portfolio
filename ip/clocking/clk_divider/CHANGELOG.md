@@ -8,6 +8,13 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/clk_divider.sdc` now uses only commands common to OpenSTA, Synopsys
+  tools and Vivado, and takes the instance as a hierarchical name.
+- The generated clock is named from the instance name, works with the block
+  as the top, and the no-op odd-divisor multicycle path is removed.
+
 ## [1.0.0] - 2026-07-30
 
 ### Added

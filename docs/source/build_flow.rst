@@ -102,8 +102,20 @@ Arguments
      - The block's constraint fragment, relative to the IP directory. The
        timing stage sources it with the instance name set to the empty
        string, so every command in it is run by OpenSTA and a command that
-       tool does not have fails the stage. ``ctest -L repo`` separately
-       rejects Synopsys-only collection commands in every fragment.
+       tool does not have fails the stage. A block registered ``NO_STA`` gets
+       a check-only test, ``sdc.<category>.<name>``, instead: every clock is
+       created on the netlist, the fragment is sourced, and no slack is
+       judged. What a fragment applied is written next to the report as
+       ``<name>.applied.sdc``. ``ctest -L repo`` separately rejects
+       Synopsys-only collection commands in every fragment.
+   * - ``SDC_INST_VAR``
+     - The fragment's instance variable, when it is not ``<SDC STEM>_INST``.
+   * - ``SDC_VARS``
+     - ``NAME=TCL`` variables set before the fragment is sourced, typically
+       its clocks: ``"FIFO_RD_CLK=[get_clocks rd_clk]"``.
+   * - ``SDC_CLOCKS``
+     - Further clock ports for the check-only test; ``CLOCK_PORT`` is always
+       the first.
    * - ``NO_LINT`` ``NO_SIM`` ``NO_SYNTH`` ``NO_STA``
      - Opt out of a stage. Used only where a stage is meaningless, for example
        timing analysis on a purely combinational block.

@@ -288,8 +288,8 @@ Integration notes
   has settled.
 * Apply ``scripts/cdc_handshake.sdc``. It includes the constraint that is
   easiest to forget: the payload register to destination capture path crosses
-  domains without a synchroniser *by design*, and must be declared as a false
-  path with a bounded delay rather than left to be timed.
+  domains without a synchroniser *by design*, and must be bounded at one
+  destination period rather than left to be timed.
 
 Verification
 ============

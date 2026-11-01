@@ -3,17 +3,26 @@
 #
 # Usage from the integrating project:
 #
-#   set RST_SYNC_INST [get_cells u_rst_sync_core]
+#   set RST_SYNC_INST u_rst_sync_core
 #   source ip/cdc/reset_sync/scripts/cdc_reset_sync.sdc
+#
+# RST_SYNC_INST is the instance's hierarchical name, not a cell object, and an empty
+# string means the block is the top of the design. Source the file once per
+# instance. Constraints attach to nets named after the block's ports, which
+# every tool keeps, rather than to register names, which every tool changes.
+#
+# Only commands common to OpenSTA, Synopsys tools and
+# Vivado are used.
 #
 # Copyright (c) 2026 SoC IP Portfolio Contributors
 # SPDX-License-Identifier: Apache-2.0
 #=============================================================================
 
 if {![info exists RST_SYNC_INST]} {
-    puts "cdc_reset_sync.sdc: RST_SYNC_INST is not set; constraining every instance"
-    set RST_SYNC_INST [get_cells -hierarchical -filter {REF_NAME =~ cdc_reset_sync*}]
+    puts "cdc_reset_sync.sdc: RST_SYNC_INST is not set; nothing constrained"
+    return
 }
+set _p [expr {$RST_SYNC_INST eq "" ? "" : "$RST_SYNC_INST/"}]
 
 #-----------------------------------------------------------------------------
 # 1. The asynchronous reset input is a false path.
@@ -25,13 +34,13 @@ if {![info exists RST_SYNC_INST]} {
 # This applies only to the reset *input* of this block. The synchronised
 # output, rst_n_out, is an ordinary synchronous signal and must stay fully
 # timed everywhere it is used - that is the entire reason the block exists.
+# Cutting the paths through the input net rather than to the flip-flops' clear
+# pins leaves no library pin name in the file.
 #-----------------------------------------------------------------------------
-set _stages [get_cells -quiet ${RST_SYNC_INST}/sync_q_reg*]
+set _arst [get_nets -quiet ${_p}arst_n_in]
 
-if {[sizeof_collection $_stages] > 0} {
-    set_false_path -to [get_pins -quiet ${_stages}/CLR]
-    set_false_path -to [get_pins -quiet ${_stages}/CD]
-    set_false_path -to [get_pins -quiet ${_stages}/RN]
+if {[llength $_arst] > 0} {
+    set_false_path -through $_arst
 }
 
 #-----------------------------------------------------------------------------
@@ -51,13 +60,11 @@ if {[sizeof_collection $_stages] > 0} {
 #-----------------------------------------------------------------------------
 
 #-----------------------------------------------------------------------------
-# 3. Reset tree balancing.
+# 3. Reset tree fanout.
 #
-# rst_n_out fans out to every flip-flop in the domain. Its own recovery and
-# removal checks are real and must be met, so give the net a high fanout
-# budget rather than excluding it from analysis.
+# rst_n_out fans out to every flip-flop in the domain, and its recovery and
+# removal checks are real and must be met. It needs a high fanout budget, not
+# an exception. That budget is a per-tool setting rather than SDC - Vivado's
+# MAX_FANOUT net property, set_max_fanout on the design in the Synopsys flow -
+# so it too is left to the integrating project.
 #-----------------------------------------------------------------------------
-set _out [get_pins -quiet ${RST_SYNC_INST}/rst_n_out]
-if {[sizeof_collection $_out] > 0} {
-    set_max_fanout 10000 $_out
-}

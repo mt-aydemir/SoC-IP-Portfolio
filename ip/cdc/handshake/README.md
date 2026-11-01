@@ -84,11 +84,11 @@ cdc_handshake #(
 
 ## Constraints
 
-Apply [`scripts/cdc_handshake.sdc`](scripts/cdc_handshake.sdc). It declares the
-two clocks asynchronous, bounds the delay into each synchroniser, and — the
-part that is easy to forget — declares the payload register to destination
-capture path as a false path with a bounded delay, since it crosses domains
-without a synchroniser by design.
+Apply [`scripts/cdc_handshake.sdc`](scripts/cdc_handshake.sdc). It bounds the
+delay into each synchroniser and — the part that is easy to forget — bounds the
+payload register to destination capture path, which crosses domains without a
+synchroniser by design. The clocks are not put in an asynchronous clock group:
+that would override the bounds.
 
 ## Verification
 

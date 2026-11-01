@@ -16,4 +16,8 @@ add_ip(
   CLOCK_PERIOD_NS 5.0
   CLOCK_PORT      src_clk
   NO_STA
+  STA_SDC         scripts/cdc_pulse_sync.sdc
+  SDC_INST_VAR    PULSE_SYNC_INST
+  SDC_VARS        "PULSE_SRC_CLK=[get_clocks src_clk]" "PULSE_DST_CLK=[get_clocks dst_clk]"
+  SDC_CLOCKS      dst_clk
 )

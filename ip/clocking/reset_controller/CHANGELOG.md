@@ -8,6 +8,13 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/reset_controller.sdc` now uses only commands common to OpenSTA, Synopsys
+  tools and Vivado, and takes the instance as a hierarchical name.
+- The delegated reset-synchroniser constraints now receive an instance
+  name, and `set_max_fanout` on a pin is now a note for the integrator.
+
 ## [1.0.0] - 2026-07-30
 
 ### Added

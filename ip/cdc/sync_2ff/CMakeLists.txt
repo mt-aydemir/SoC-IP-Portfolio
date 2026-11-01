@@ -10,4 +10,7 @@ add_ip(
   PARAMS          WIDTH=8 STAGES=3
   CLOCK_PERIOD_NS 4.0
   CLOCK_PORT      clk
+  STA_SDC         scripts/cdc_sync_2ff.sdc
+  SDC_INST_VAR    SYNC_INST
+  SDC_VARS        "SYNC_DST=[get_clocks clk]"
 )

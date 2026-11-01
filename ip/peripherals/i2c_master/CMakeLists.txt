@@ -11,4 +11,5 @@ add_ip(
   PARAMS          DIV_WIDTH=16 SYNC_STAGES=2
   CLOCK_PERIOD_NS 5.0
   CLOCK_PORT      clk
+  STA_SDC         scripts/i2c_master.sdc
 )

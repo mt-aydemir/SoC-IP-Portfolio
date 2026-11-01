@@ -8,6 +8,14 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/cdc_reset_sync.sdc` now uses only commands common to OpenSTA, Synopsys
+  tools and Vivado, and takes the instance as a hierarchical name.
+- The false path now goes through the `arst_n_in` net rather than to
+  library-specific clear pins, and `set_max_fanout` on a pin, which SDC does
+  not allow, is now a note for the integrator.
+
 ## [1.0.0] - 2026-07-30
 
 ### Added

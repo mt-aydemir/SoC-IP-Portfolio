@@ -78,8 +78,9 @@ clk_mux #(.STAGES(2)) u_clk_sel (
 
 ## Constraints
 
-Apply [`scripts/clk_mux.sdc`](scripts/clk_mux.sdc): the two clocks are
-asynchronous, `clk_out` is a generated clock derived from both, and both
+Apply [`scripts/clk_mux.sdc`](scripts/clk_mux.sdc): `clk_out` is a
+generated clock derived from both sources, the two derivations are logically
+exclusive, the paths between the sources are bounded at one period, and both
 synchroniser chains must be preserved.
 
 ## Verification

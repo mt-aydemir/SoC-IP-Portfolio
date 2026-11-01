@@ -15,4 +15,8 @@ add_ip(
   CLOCK_PERIOD_NS 10.0
   CLOCK_PORT      clk0
   NO_STA
+  STA_SDC         scripts/clk_mux.sdc
+  SDC_INST_VAR    MUX_INST
+  SDC_VARS        "MUX_CLK0=[get_clocks clk0]" "MUX_CLK1=[get_clocks clk1]"
+  SDC_CLOCKS      clk1
 )

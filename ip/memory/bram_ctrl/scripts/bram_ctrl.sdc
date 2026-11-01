@@ -3,18 +3,26 @@
 #
 # Usage from the integrating project:
 #
-#   set CTRL_INST [get_cells u_bram_ctrl]
-#   set CTRL_CLK  [get_clocks clk_bus]
+#   set CTRL_INST u_bram_ctrl
 #   source ip/memory/bram_ctrl/scripts/bram_ctrl.sdc
+#
+# CTRL_INST is the instance's hierarchical name, not a cell object, and an empty
+# string means the block is the top of the design. Source the file once per
+# instance. Constraints attach to nets named after the block's ports, which
+# every tool keeps, rather than to register names, which every tool changes.
+#
+# Only commands common to OpenSTA, Synopsys tools and
+# Vivado are used.
 #
 # Copyright (c) 2026 SoC IP Portfolio Contributors
 # SPDX-License-Identifier: Apache-2.0
 #=============================================================================
 
 if {![info exists CTRL_INST]} {
-    puts "bram_ctrl.sdc: CTRL_INST is not set; nothing to constrain"
+    puts "bram_ctrl.sdc: CTRL_INST is not set; nothing constrained"
     return
 }
+set _p [expr {$CTRL_INST eq "" ? "" : "$CTRL_INST/"}]
 
 #-----------------------------------------------------------------------------
 # The block needs no timing exceptions.
@@ -31,16 +39,15 @@ if {![info exists CTRL_INST]} {
 # same cycle the previous response is taken, and it is short, but it is also
 # the path a bus bridge in front of the block will extend.
 #
-# Bounding it at half a period keeps enough margin for that bridge; if the
-# constraint cannot be met, add a register slice on the request channel rather
-# than relaxing the block.
+# It is reported as its own path group. A max-delay through the pin would
+# constrain the whole register-to-register path, the bridge's logic included,
+# which is a requirement on the integrator's design rather than on this
+# block. If the group misses timing, add a register slice on the request
+# channel rather than relaxing the block.
 #-----------------------------------------------------------------------------
-if {[info exists CTRL_CLK]} {
-    set _period [get_property $CTRL_CLK period]
-    set _ready [get_pins -quiet ${CTRL_INST}/req_ready]
-    if {[sizeof_collection $_ready] > 0} {
-        set_max_delay [expr {$_period * 0.5}] -to $_ready
-    }
+set _ready [get_nets -quiet ${_p}req_ready]
+if {[llength $_ready] > 0} {
+    group_path -name bram_ctrl_req_ready -through $_ready
 }
 
 #-----------------------------------------------------------------------------

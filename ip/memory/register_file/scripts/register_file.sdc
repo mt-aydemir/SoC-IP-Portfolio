@@ -3,18 +3,26 @@
 #
 # Usage from the integrating project:
 #
-#   set RF_INST [get_cells u_regfile]
-#   set RF_CLK  [get_clocks clk_core]
+#   set RF_INST u_regfile
 #   source ip/memory/register_file/scripts/register_file.sdc
+#
+# RF_INST is the instance's hierarchical name, not a cell object, and an empty
+# string means the block is the top of the design. Source the file once per
+# instance. Constraints attach to nets named after the block's ports, which
+# every tool keeps, rather than to register names, which every tool changes.
+#
+# Only commands common to OpenSTA, Synopsys tools and
+# Vivado are used.
 #
 # Copyright (c) 2026 SoC IP Portfolio Contributors
 # SPDX-License-Identifier: Apache-2.0
 #=============================================================================
 
 if {![info exists RF_INST]} {
-    puts "register_file.sdc: RF_INST is not set; nothing to constrain"
+    puts "register_file.sdc: RF_INST is not set; nothing constrained"
     return
 }
+set _p [expr {$RF_INST eq "" ? "" : "$RF_INST/"}]
 
 #-----------------------------------------------------------------------------
 # The read ports are combinational.
@@ -23,16 +31,13 @@ if {![info exists RF_INST]} {
 # is expected in the same cycle. That path is the block's critical path by
 # construction and it is a normal single-cycle path - no exception applies.
 #
-# What this constraint does is make the path visible under a recognisable name,
-# so that a timing report shows "register file read" rather than an anonymous
-# critical path through a large multiplexer.
+# The path group makes it visible under a recognisable name, so that a timing
+# report shows "register file read" rather than an anonymous critical path
+# through a large multiplexer.
 #-----------------------------------------------------------------------------
-if {[info exists RF_CLK]} {
-    set _period [get_property $RF_CLK period]
-    set _read_pins [get_pins -quiet ${RF_INST}/read_data*]
-    if {[sizeof_collection $_read_pins] > 0} {
-        set_max_delay $_period -to $_read_pins
-    }
+set _read [get_nets -quiet ${_p}read_data*]
+if {[llength $_read] > 0} {
+    group_path -name register_file_read -through $_read
 }
 
 #-----------------------------------------------------------------------------

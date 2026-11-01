@@ -3,18 +3,26 @@
 #
 # Usage from the integrating project:
 #
-#   set RSTCTL_INST [get_cells u_rstctl]
-#   set RSTCTL_CLK  [get_clocks clk_sys]
+#   set RSTCTL_INST u_rstctl
 #   source ip/clocking/reset_controller/scripts/reset_controller.sdc
+#
+# RSTCTL_INST is the instance's hierarchical name, not a cell object, and an empty
+# string means the block is the top of the design. Source the file once per
+# instance. Constraints attach to nets named after the block's ports, which
+# every tool keeps, rather than to register names, which every tool changes.
+#
+# Only commands common to OpenSTA, Synopsys tools and
+# Vivado are used.
 #
 # Copyright (c) 2026 SoC IP Portfolio Contributors
 # SPDX-License-Identifier: Apache-2.0
 #=============================================================================
 
 if {![info exists RSTCTL_INST]} {
-    puts "reset_controller.sdc: RSTCTL_INST is not set; constraining every instance"
-    set RSTCTL_INST [get_cells -hierarchical -filter {REF_NAME =~ reset_controller*}]
+    puts "reset_controller.sdc: RSTCTL_INST is not set; nothing constrained"
+    return
 }
+set _p [expr {$RSTCTL_INST eq "" ? "" : "$RSTCTL_INST/"}]
 
 #-----------------------------------------------------------------------------
 # 1. The asynchronous reset input is a false path.
@@ -24,15 +32,18 @@ if {![info exists RSTCTL_INST]} {
 # everything downstream of the synchroniser is fully timed.
 #
 # This delegates to the reset synchroniser's own constraints, since the
-# instance inside this block is an ordinary cdc_reset_sync.
+# instance inside this block is an ordinary cdc_reset_sync. The fragment is
+# looked up beside this one in the repository layout; an integrator who has
+# copied only this IP sources it themselves with RST_SYNC_INST set as below.
 #-----------------------------------------------------------------------------
-set RST_SYNC_INST [get_cells -quiet ${RSTCTL_INST}/u_sync]
+set RST_SYNC_INST ${_p}u_sync
+set _reset_sync_sdc [file join [file dirname [info script]] \
+    .. .. .. cdc reset_sync scripts cdc_reset_sync.sdc]
 
-if {[sizeof_collection $RST_SYNC_INST] > 0} {
-    set _here [file dirname [info script]]
-    if {[file exists ${_here}/../../../cdc/reset_sync/scripts/cdc_reset_sync.sdc]} {
-        source ${_here}/../../../cdc/reset_sync/scripts/cdc_reset_sync.sdc
-    }
+if {[file exists $_reset_sync_sdc]} {
+    source $_reset_sync_sdc
+} else {
+    puts "reset_controller.sdc: $_reset_sync_sdc not found; source it for $RST_SYNC_INST"
 }
 
 #-----------------------------------------------------------------------------
@@ -43,14 +54,10 @@ if {[sizeof_collection $RST_SYNC_INST] > 0} {
 # must be met. Do NOT set a false path on them: that is the mistake that
 # reintroduces the asynchronous release this block exists to eliminate.
 #
-# What they do need is a fanout budget. Each stage drives every flip-flop in
-# its part of the design.
+# What they do need is a fanout budget, since each stage drives every
+# flip-flop in its part of the design. As for cdc_reset_sync, that is a
+# per-tool setting rather than SDC and is left to the integrating project.
 #-----------------------------------------------------------------------------
-set _stage_pins [get_pins -quiet ${RSTCTL_INST}/rst_n_out*]
-
-if {[sizeof_collection $_stage_pins] > 0} {
-    set_max_fanout 10000 $_stage_pins
-}
 
 #-----------------------------------------------------------------------------
 # 3. sw_reset is synchronous.

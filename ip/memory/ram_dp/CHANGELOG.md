@@ -8,6 +8,13 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/ram_dp.sdc` now uses only commands common to OpenSTA, Synopsys
+  tools and Vivado, and takes the instance as a hierarchical name.
+- The clock-name comparison used OpenSTA's `get_property` argument order,
+  which Vivado reverses.
+
 ## [1.0.0] - 2026-07-30
 
 ### Added

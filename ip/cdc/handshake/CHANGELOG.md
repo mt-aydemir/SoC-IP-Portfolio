@@ -8,6 +8,14 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/cdc_handshake.sdc` now uses only commands common to OpenSTA, Synopsys
+  tools and Vivado, and takes the instance as a hierarchical name.
+- The asynchronous clock group overrode the skew bounds on the control
+  crossings and the payload path; it is gone, and all three are bounded
+  through named nets.
+
 ## [1.0.0] - 2026-07-30
 
 ### Added

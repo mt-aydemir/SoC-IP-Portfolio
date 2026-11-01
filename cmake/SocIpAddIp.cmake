@@ -56,7 +56,10 @@ endfunction()
 #   CLOCK_PORT      name of the STA clock port                (default: clk)
 #   STA_SDC         the block's constraint fragment, relative to the IP
 #                   directory; sourced by the STA stage so that every command
-#                   in it is run by a real tool
+#                   in it is run by a real tool. With NO_STA it gets a
+#                   check-only test, sdc.<category>.<name>, instead
+#   SDC_INST_VAR    the fragment's instance variable, set to "" (the block
+#                   as the top)                 (default: <SDC STEM>_INST)
 #   TIMESCALE       Verilator timescale                 (default: 1ns/1ps)
 #   SVTB            self-checking SystemVerilog testbench source, relative to
 #                   the IP directory; compiled with `verilator --binary`
@@ -69,12 +72,17 @@ endfunction()
 #   PARAMS          NAME=VALUE elaboration parameters for sim/synth/sta
 #   LINT_ARGS       extra Verilator arguments
 #   SYNTH_ARGS      extra arguments forwarded to run_synth.py
+#   SDC_VARS        NAME=TCL variables set before STA_SDC is sourced, e.g.
+#                   "SYNC_DST=[get_clocks clk]"
+#   SDC_CLOCKS      further clock ports for the check-only test; CLOCK_PORT
+#                   is always the first
 #-----------------------------------------------------------------------------
 function(add_ip)
   set(_opts    NO_LINT NO_SIM NO_SYNTH NO_STA)
   set(_one     NAME TOP CATEGORY CLOCK_PERIOD_NS CLOCK_PORT TIMESCALE SVTB SVTB_TOP
-               STA_SDC)
-  set(_multi   SOURCES DEPENDS COCOTB_MODULES PARAMS LINT_ARGS SYNTH_ARGS)
+               STA_SDC SDC_INST_VAR)
+  set(_multi   SOURCES DEPENDS COCOTB_MODULES PARAMS LINT_ARGS SYNTH_ARGS
+               SDC_VARS SDC_CLOCKS)
   cmake_parse_arguments(IP "${_opts}" "${_one}" "${_multi}" ${ARGN})
 
   if(NOT IP_NAME)
@@ -315,6 +323,45 @@ function(add_ip)
   #---------------------------------------------------------------------------
   # Stage 4: OpenSTA timing analysis on the synthesised netlist
   #---------------------------------------------------------------------------
+  set(_sdc_args "")
+  if(IP_STA_SDC)
+    list(APPEND _sdc_args --sdc "${CMAKE_CURRENT_SOURCE_DIR}/${IP_STA_SDC}")
+    if(IP_SDC_INST_VAR)
+      list(APPEND _sdc_args --sdc-inst-var "${IP_SDC_INST_VAR}")
+    endif()
+    foreach(_v IN LISTS IP_SDC_VARS)
+      list(APPEND _sdc_args --sdc-var "${_v}")
+    endforeach()
+  endif()
+
+  # A block the single-clock analysis cannot time still has its constraint
+  # fragment executed, so that no fragment ships unrun.
+  if(SOC_IP_ENABLE_STA AND SOC_IP_STA AND SOC_IP_YOSYS AND IP_NO_STA AND NOT IP_NO_SYNTH
+     AND IP_STA_SDC)
+    set(_sdc_cmd
+      "${SOC_IP_PYTHON}" "${SOC_IP_RUN_STA}"
+        --sta      "${SOC_IP_STA}"
+        --top      "${IP_TOP}"
+        --name     "${IP_NAME}"
+        --netlist  "${_out}/synth/${IP_NAME}.mapped.v"
+        --liberty  "${CMAKE_SOURCE_DIR}/scripts/lib/generic_stdcell.lib"
+        --period   "${IP_CLOCK_PERIOD_NS}"
+        --clock    "${IP_CLOCK_PORT}"
+        --out-dir  "${_out}/sta"
+        --report   "${SOC_IP_REPORT_OUT}/sta/${IP_NAME}.sdc.rpt"
+        --check-only ${_sdc_args})
+    foreach(_c IN LISTS IP_SDC_CLOCKS)
+      list(APPEND _sdc_cmd --extra-clock "${_c}")
+    endforeach()
+    add_test(NAME sdc.${IP_CATEGORY}.${IP_NAME}
+             COMMAND ${_sdc_cmd}
+             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
+    set_tests_properties(sdc.${IP_CATEGORY}.${IP_NAME} PROPERTIES
+      LABELS "sta;${IP_CATEGORY}"
+      TIMEOUT 300
+      FIXTURES_REQUIRED F_synth_${IP_NAME})
+  endif()
+
   if(SOC_IP_ENABLE_STA AND SOC_IP_STA AND SOC_IP_YOSYS AND NOT IP_NO_STA AND NOT IP_NO_SYNTH)
     set(_sta_cmd
       "${SOC_IP_PYTHON}" "${SOC_IP_RUN_STA}"
@@ -326,10 +373,8 @@ function(add_ip)
         --period   "${IP_CLOCK_PERIOD_NS}"
         --clock    "${IP_CLOCK_PORT}"
         --out-dir  "${_out}/sta"
-        --report   "${SOC_IP_REPORT_OUT}/sta/${IP_NAME}.rpt")
-    if(IP_STA_SDC)
-      list(APPEND _sta_cmd --sdc "${CMAKE_CURRENT_SOURCE_DIR}/${IP_STA_SDC}")
-    endif()
+        --report   "${SOC_IP_REPORT_OUT}/sta/${IP_NAME}.rpt"
+        ${_sdc_args})
 
     add_custom_target(sta_${IP_NAME}
       COMMAND ${_sta_cmd}

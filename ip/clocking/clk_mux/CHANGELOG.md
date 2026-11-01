@@ -10,6 +10,15 @@ and this IP is versioned independently under
 
 ### Fixed
 
+- `scripts/clk_mux.sdc` now uses only commands common to OpenSTA, Synopsys
+  tools and Vivado, and takes the instance as a hierarchical name.
+- The second generated clock used `-add` without `-master_clock`, which every
+  tool rejects. The asynchronous clock group overrode the enable bounds, and
+  those bounds missed the crossing from the other branch's synchroniser
+  state; the paths between the two source clocks are now bounded instead.
+
+### Fixed
+
 - **Both branches could be enabled at once when `select` turned back
   mid-changeover.** Each request was qualified only with the other branch's
   falling-edge enable, so a chain that had filled but whose enable had not yet

@@ -8,6 +8,12 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/ram_sp.sdc` now uses only commands common to OpenSTA, Synopsys
+  tools and Vivado, and takes the instance as a hierarchical name.
+- Usage now takes the instance as a hierarchical name.
+
 ## [1.0.0] - 2026-07-30
 
 ### Added

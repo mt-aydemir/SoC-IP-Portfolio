@@ -11,4 +11,6 @@ add_ip(
   PARAMS          DATA_WIDTH=32 DEPTH=16
   CLOCK_PERIOD_NS 5.0
   CLOCK_PORT      clk
+  STA_SDC         scripts/fifo_sync.sdc
+  SDC_INST_VAR    FIFO_INST
 )

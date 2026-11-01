@@ -89,8 +89,37 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `add_ip(STA_SDC ...)` makes the timing stage source a fragment, which the
   five sequential arithmetic blocks use - `mac` now reports its multiplier
   and accumulator path groups - and `repo.sdc_portable` rejects
-  non-portable commands in every fragment, with the twelve older `cdc`,
-  `clocking` and `memory` fragments listed as still to convert.
+  non-portable commands in every fragment.
+- **The `cdc`, `clocking` and `memory` timing constraints were never applied
+  as written.** Beyond the same Synopsys-only commands, they used
+  `get_property` in OpenSTA's argument order (Vivado's is the reverse), the
+  Vivado-only `-datapath_only`, Vivado's `REF_NAME` filter, and register and
+  library pin names (`sync_q_reg*0*/D`, `CLR`, `C`) that Yosys does not
+  produce. Several were wrong in any tool:
+  - every skew bound on a crossing was overridden: `cdc_sync_2ff` declared a
+    false path on the same pins, and `cdc_pulse_sync`, `cdc_handshake`,
+    `fifo_async` and `clk_mux` an asynchronous clock group, both of which
+    take precedence over a max-delay. The bounds now replace them, so any
+    other path between the clocks is reported rather than hidden;
+  - `clk_mux` declared its second generated clock with `-add` but no
+    `-master_clock`, which every tool rejects, and its select and enable
+    constraints missed the crossing from the other branch's synchroniser
+    state; the bound is now between the two source clocks;
+  - `fifo_async` bounded its memory path to a `read_data_reg` that does not
+    exist (the port is `rd_data`);
+  - `bram_ctrl`, `fifo_sync` and `register_file` put max-delays on
+    hierarchical output pins, which constrained the integrator's logic beyond
+    the block; they are path groups now;
+  - `cdc_reset_sync` and `reset_controller` applied `set_max_fanout` to a
+    pin, which SDC does not allow.
+  All fifteen fragments, the RAMs' included, now attach to nets named after
+  the block's ports and use commands common to OpenSTA, Synopsys tools and
+  Vivado, with small `socip_*` procedures where the tools disagree. Every
+  fragment is executed by the flow: through the timing stage, or for the
+  `NO_STA` blocks a new check-only `sdc.<category>.<name>` test that creates
+  every clock and sources the fragment against the netlist (`ram_dp`
+  excepted, whose netlist OpenSTA cannot read). The applied constraints are
+  written to `<name>.applied.sdc` for review.
 - **`subtractor`: `overflow` was inverted in the unsigned configuration.** It
   was forwarded from the internal adder, whose unsigned overflow is its carry
   out — which for `a + ~b + ~borrow_in` means *no* underflow. Found by the new

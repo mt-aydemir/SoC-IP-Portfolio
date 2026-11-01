@@ -80,9 +80,12 @@ existed at the source. Use instead:
 
 **Constrain the crossings.** Synchroniser chains must not be retimed, merged or
 spread across the die. Each CDC block's ``scripts/`` directory contains the
-constraints to apply; the crossings are false paths for setup and hold, with a
-maximum-delay constraint on the source-to-first-flop segment so that skew stays
-below one destination clock period.
+constraints to apply. Each crossing gets a data-path maximum delay of one
+destination clock period on the source-to-first-flop segment, so that skew
+stays below a period, *instead of* a false path or an asynchronous clock group:
+both of those take precedence over a maximum delay in every tool, and declaring
+them alongside it silently removes the bound. Any other path between the two
+clocks is then reported rather than hidden.
 
 Streaming interface convention
 ==============================
@@ -122,6 +125,22 @@ clock definitions, false paths across CDC boundaries and any multi-cycle paths
 its architecture relies on. Multi-cycle paths in particular are not optional —
 a block that assumes one will fail timing or, worse, pass timing while being
 functionally wrong if the constraint is omitted.
+
+A fragment is sourced once per instance, with the instance's hierarchical name
+in a variable the file's header names — a name, not a cell object — and the
+clocks it needs as clock objects::
+
+   set FIFO_INST   u_cdc_fifo
+   set FIFO_WR_CLK [get_clocks clk_wr]
+   set FIFO_RD_CLK [get_clocks clk_rd]
+   source ip/memory/fifo_async/scripts/fifo_async.sdc
+
+Fragments use only commands common to OpenSTA, the Synopsys tools and Vivado,
+and attach to nets named after the block's ports, which every tool keeps,
+rather than to register names, which every tool changes. Where the tools
+disagree on spelling, a small ``socip_*`` procedure tries each form. The flow
+sources every fragment against the synthesised netlist with OpenSTA, so none
+ships unexecuted.
 
 Parameter legality
 ==================

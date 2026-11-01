@@ -7,23 +7,45 @@
 #
 # Usage from the integrating project:
 #
-#   set DIV_INST    [get_cells u_div]
-#   set DIV_SRC_CLK [get_clocks clk_sys]
-#   set DIV_RATIO   5
+#   set DIV_INST  u_div
+#   set DIV_RATIO 5
 #   source ip/clocking/clk_divider/scripts/clk_divider.sdc
+#
+# DIV_INST is the instance's hierarchical name, not a cell object, and an empty
+# string means the block is the top of the design. Source the file once per
+# instance. Constraints attach to nets named after the block's ports, which
+# every tool keeps, rather than to register names, which every tool changes.
+#
+# Only commands common to OpenSTA, Synopsys tools and
+# Vivado are used.
 #
 # Copyright (c) 2026 SoC IP Portfolio Contributors
 # SPDX-License-Identifier: Apache-2.0
 #=============================================================================
 
+#-----------------------------------------------------------------------------
+# One of the block's own pins: a port when the block is the top of the design,
+# a hierarchical pin otherwise.
+#-----------------------------------------------------------------------------
+if {[llength [info procs socip_block_pin]] == 0} {
+    proc socip_block_pin {inst name} {
+        if {$inst eq ""} {
+            return [get_ports -quiet $name]
+        }
+        return [get_pins -quiet $inst/$name]
+    }
+}
+
 if {![info exists DIV_INST]} {
-    puts "clk_divider.sdc: DIV_INST is not set; nothing to constrain"
+    puts "clk_divider.sdc: DIV_INST is not set; nothing constrained"
     return
 }
-if {![info exists DIV_SRC_CLK] || ![info exists DIV_RATIO]} {
-    puts "clk_divider.sdc: DIV_SRC_CLK and DIV_RATIO must both be set"
+set _p [expr {$DIV_INST eq "" ? "" : "$DIV_INST/"}]
+if {![info exists DIV_RATIO]} {
+    puts "clk_divider.sdc: DIV_RATIO is not set; nothing constrained"
     return
 }
+set _base [expr {$DIV_INST eq "" ? "clk_divider" : [string map {/ _} $DIV_INST]}]
 
 #-----------------------------------------------------------------------------
 # 1. Declare the divided clock.
@@ -33,34 +55,28 @@ if {![info exists DIV_SRC_CLK] || ![info exists DIV_RATIO]} {
 # divided domain unanalysed, so timing closes trivially and the design fails in
 # hardware.
 #
-# The source is the flip-flop that produces the output, not the module port,
-# so that the tool includes the clock tree insertion delay up to that point.
+# The clock is declared on the block's clk_out and derived from its clk. Both
+# are ports of the block, so the names hold in every tool; the flip-flop that
+# drives clk_out is named differently by each of them.
 #-----------------------------------------------------------------------------
-set _out_pin [get_pins -quiet ${DIV_INST}/clk_out]
+set _out [socip_block_pin $DIV_INST clk_out]
+set _src [socip_block_pin $DIV_INST clk]
 
-if {[sizeof_collection $_out_pin] > 0} {
-    create_generated_clock -name ${DIV_INST}_clk_out \
-        -source [get_pins -quiet ${DIV_INST}/clk] \
-        -divide_by $DIV_RATIO \
-        $_out_pin
+if {[llength $_out] > 0 && [llength $_src] > 0} {
+    create_generated_clock -name ${_base}_clk_out -source $_src \
+        -divide_by $DIV_RATIO $_out
 }
 
 #-----------------------------------------------------------------------------
 # 2. The odd-divisor path.
 #
 # An odd DIVISOR combines a rising-edge phase with a falling-edge phase. The
-# path between them is a genuine half-cycle path: launched on the rising edge,
-# captured on the following falling edge. Most tools analyse this correctly
-# from the clock definition alone, but stating it makes the intent explicit and
-# stops an aggressive tool from treating it as a full cycle.
+# path between them is a genuine half-cycle path, launched on the rising edge
+# and captured on the following falling edge, and every tool derives that from
+# the clock definition alone: the default analysis is the correct one and no
+# exception is declared. A multicycle path here would only restate the default
+# - or, written wrongly, relax a real half-cycle check.
 #-----------------------------------------------------------------------------
-set _rise_ff [get_cells -quiet ${DIV_INST}/g_divide.g_odd.phase_rise_q_reg]
-set _fall_ff [get_cells -quiet ${DIV_INST}/g_divide.g_odd.phase_fall_q_reg]
-
-if {[sizeof_collection $_rise_ff] > 0 && [sizeof_collection $_fall_ff] > 0} {
-    set_multicycle_path -setup 1 -from $_rise_ff -to $_fall_ff
-    set_multicycle_path -hold  0 -from $_rise_ff -to $_fall_ff
-}
 
 #-----------------------------------------------------------------------------
 # 3. Nothing else.

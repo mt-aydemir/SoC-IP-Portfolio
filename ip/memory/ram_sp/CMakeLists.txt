@@ -20,4 +20,6 @@ add_ip(
   CLOCK_PERIOD_NS 5.0
   CLOCK_PORT      clk
   NO_STA
+  STA_SDC         scripts/ram_sp.sdc
+  SDC_INST_VAR    RAM_INST
 )

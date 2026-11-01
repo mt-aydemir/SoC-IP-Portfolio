@@ -15,4 +15,8 @@ add_ip(
   CLOCK_PERIOD_NS 5.0
   CLOCK_PORT      src_clk
   NO_STA
+  STA_SDC         scripts/cdc_handshake.sdc
+  SDC_INST_VAR    HS_INST
+  SDC_VARS        "HS_SRC_CLK=[get_clocks src_clk]" "HS_DST_CLK=[get_clocks dst_clk]"
+  SDC_CLOCKS      dst_clk
 )

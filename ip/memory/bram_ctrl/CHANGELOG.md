@@ -8,6 +8,13 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/bram_ctrl.sdc` now uses only commands common to OpenSTA, Synopsys
+  tools and Vivado, and takes the instance as a hierarchical name.
+- The max-delay on the `req_ready` pin constrained the integrator's logic
+  beyond the block; it is a path group now.
+
 ## [1.0.0] - 2026-07-30
 
 ### Added

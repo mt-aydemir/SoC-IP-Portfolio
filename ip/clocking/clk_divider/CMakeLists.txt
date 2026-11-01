@@ -13,4 +13,7 @@ add_ip(
   PARAMS          DIVISOR=5
   CLOCK_PERIOD_NS 10.0
   CLOCK_PORT      clk
+  STA_SDC         scripts/clk_divider.sdc
+  SDC_INST_VAR    DIV_INST
+  SDC_VARS        "DIV_RATIO=5"
 )

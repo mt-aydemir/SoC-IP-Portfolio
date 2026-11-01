@@ -74,9 +74,9 @@ cdc_sync_2ff #(
 ## Constraints
 
 Synchroniser chains must not be retimed, merged or spread across the die.
-Apply [`scripts/cdc_sync_2ff.sdc`](scripts/cdc_sync_2ff.sdc), which declares
-the crossing as a false path for setup and hold and bounds the skew on the
-source-to-first-flop segment.
+Apply [`scripts/cdc_sync_2ff.sdc`](scripts/cdc_sync_2ff.sdc), which bounds
+the source-to-first-flop segment at one destination period in place of the
+setup check (or cuts it, if the destination clock is not given).
 
 ## Verification
 

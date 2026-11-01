@@ -76,7 +76,7 @@ cdc_pulse_sync #(.STAGES(2)) u_irq_sync (
 ## Constraints
 
 Apply [`scripts/cdc_pulse_sync.sdc`](scripts/cdc_pulse_sync.sdc): both
-crossings are false paths with a bounded source-to-first-flop delay.
+crossings get a bounded source-to-first-flop delay instead of a timing check.
 
 ## Verification
 

@@ -8,6 +8,14 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/fifo_async.sdc` now uses only commands common to OpenSTA, Synopsys
+  tools and Vivado, and takes the instance as a hierarchical name.
+- The asynchronous clock group overrode the pointer and data bounds; it is
+  gone. The data bound named a `read_data_reg` that does not exist and now
+  goes through the storage array.
+
 ## [1.0.0] - 2026-07-30
 
 ### Added

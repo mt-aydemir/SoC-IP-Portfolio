@@ -8,6 +8,13 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/cdc_sync_2ff.sdc` now uses only commands common to OpenSTA, Synopsys
+  tools and Vivado, and takes the instance as a hierarchical name.
+- The false path on the crossing overrode its own skew bound; the bound now
+  replaces it, and the crossing is named by the `d_async` net.
+
 ## [1.0.0] - 2026-07-30
 
 ### Added
