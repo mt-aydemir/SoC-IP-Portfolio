@@ -26,6 +26,12 @@ PROBES
   and this script flattens the design and joins the two with `connect -set`
   before the proof. The RTL itself carries no formal code.
 
+MULTICLOCK
+  With --multiclock the clocks are ordinary free inputs and every solver
+  step may change any input, clocks included, so every ordering of edges
+  and data changes across domains is explored. A wrapper that needs a
+  per-step history declares the solver's clock as (* gclk *) reg gclk.
+
 When SymbiYosys is the YoWASP build, the Yosys, smtbmc and witness programs
 it starts are the YoWASP ones beside it; their plain names are not installed
 by a no-root setup.
@@ -48,6 +54,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--top", required=True, help="property wrapper module")
     p.add_argument("--name", required=True)
     p.add_argument("--depth", type=int, default=20)
+    p.add_argument("--multiclock", action="store_true",
+                   help="clocks are free inputs; one solver step per input change")
     p.add_argument("--out-dir", required=True)
     p.add_argument("--report", required=True)
     p.add_argument("--param", action="append", default=[])
@@ -76,6 +84,7 @@ cover
 prove: mode prove
 cover: mode cover
 depth {args.depth}
+{"multiclock on" if args.multiclock else ""}
 
 [engines]
 smtbmc {args.solver}

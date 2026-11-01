@@ -19,4 +19,8 @@ add_ip(
   SDC_INST_VAR    HS_INST
   SDC_VARS        "HS_SRC_CLK=[get_clocks src_clk]" "HS_DST_CLK=[get_clocks dst_clk]"
   SDC_CLOCKS      dst_clk
+  FORMAL_MULTICLOCK
+  FORMAL_TOP      cdc_handshake_formal
+  FORMAL_SOURCES  formal/cdc_handshake_formal.sv
+  FORMAL_DEPTH    40
 )

@@ -310,6 +310,10 @@ Verification
    * - ``tb/tb_cdc_handshake.sv``
      - Portable self-checking smoke test at 10 ns / 23 ns, streaming 400 words
        with and without destination back-pressure.
+   * - ``formal/cdc_handshake_formal.sv``
+     - Proof with free-running clocks and independent resets: every
+       word delivered once, in order and intact, held until taken, with the
+       payload stable while the destination may sample it.
 
 .. code-block:: bash
 

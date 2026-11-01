@@ -258,6 +258,11 @@ Verification
    * - ``tb/tb_cdc_sync_2ff.sv``
      - Portable self-checking smoke test covering the same behaviour without a
        Python dependency.
+   * - ``formal/cdc_sync_2ff_formal.sv``
+     - Proof with free-running clocks: the reset value at once on
+       reset, changes only on rising edges, and the input on the output
+       once it has been stable across STAGES edges, at two and three
+       stages.
 
 .. code-block:: bash
 

@@ -203,6 +203,10 @@ Verification
        prove the chain flushes completely every time.
    * - ``tb/tb_cdc_reset_sync.sv``
      - Portable self-checking smoke test covering the same behaviour.
+   * - ``formal/cdc_reset_sync_formal.sv``
+     - Proof with free-running clocks: assertion at once, release
+       exactly on the STAGES-th rising edge that finds the input high, at
+       two and three stages.
 
 .. code-block:: bash
 

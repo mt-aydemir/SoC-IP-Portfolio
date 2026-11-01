@@ -266,6 +266,10 @@ only a measurement catches that.
        divisor.
    * - ``tb/tb_clk_divider.sv``
      - Portable smoke test measuring high and low phases with ``$realtime``.
+   * - ``formal/clk_divider_formal.sv``
+     - Proof with a free-running clock at DIVISOR 3 and 4: no
+       glitch, high and low phases of exactly DIVISOR half-periods, the
+       enable behaviour and the clk_en period.
 
 .. code-block:: bash
 

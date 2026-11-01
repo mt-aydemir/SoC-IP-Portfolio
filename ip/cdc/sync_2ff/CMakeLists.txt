@@ -13,4 +13,8 @@ add_ip(
   STA_SDC         scripts/cdc_sync_2ff.sdc
   SDC_INST_VAR    SYNC_INST
   SDC_VARS        "SYNC_DST=[get_clocks clk]"
+  FORMAL_MULTICLOCK
+  FORMAL_TOP      cdc_sync_2ff_formal
+  FORMAL_SOURCES  formal/cdc_sync_2ff_formal.sv
+  FORMAL_DEPTH    16
 )

@@ -47,6 +47,9 @@ endfunction()
 #
 # Options:
 #   NO_LINT NO_SIM NO_SYNTH NO_STA   - opt out of a flow stage
+#   FORMAL_MULTICLOCK                - prove with free-running clocks, for
+#                                      blocks with several clocks or with
+#                                      logic on both edges
 #
 # Single-value:
 #   NAME            IP name, also the CTest suffix                  (required)
@@ -85,7 +88,7 @@ endfunction()
 #                   since proofs run at small configurations of their own
 #-----------------------------------------------------------------------------
 function(add_ip)
-  set(_opts    NO_LINT NO_SIM NO_SYNTH NO_STA)
+  set(_opts    NO_LINT NO_SIM NO_SYNTH NO_STA FORMAL_MULTICLOCK)
   set(_one     NAME TOP CATEGORY CLOCK_PERIOD_NS CLOCK_PORT TIMESCALE SVTB SVTB_TOP
                STA_SDC SDC_INST_VAR FORMAL_TOP FORMAL_DEPTH)
   set(_multi   SOURCES DEPENDS COCOTB_MODULES PARAMS LINT_ARGS SYNTH_ARGS
@@ -315,6 +318,9 @@ function(add_ip)
       list(APPEND _formal_srcs "${_abs}")
     endforeach()
     set(_formal_params "")
+    if(IP_FORMAL_MULTICLOCK)
+      list(APPEND _formal_params --multiclock)
+    endif()
     foreach(_p IN LISTS IP_FORMAL_PARAMS)
       list(APPEND _formal_params --param "${_p}")
     endforeach()

@@ -19,4 +19,8 @@ add_ip(
   SDC_INST_VAR    MUX_INST
   SDC_VARS        "MUX_CLK0=[get_clocks clk0]" "MUX_CLK1=[get_clocks clk1]"
   SDC_CLOCKS      clk1
+  FORMAL_MULTICLOCK
+  FORMAL_TOP      clk_mux_formal
+  FORMAL_SOURCES  formal/clk_mux_formal.sv
+  FORMAL_DEPTH    30
 )

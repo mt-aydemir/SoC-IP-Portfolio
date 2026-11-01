@@ -17,4 +17,8 @@ add_ip(
   STA_SDC         scripts/clk_gate.sdc
   SDC_INST_VAR    GATE_INST
   SDC_VARS        "GATE_SRC_CLK=[get_clocks clk]"
+  FORMAL_MULTICLOCK
+  FORMAL_TOP      clk_gate_formal
+  FORMAL_SOURCES  formal/clk_gate_formal.sv
+  FORMAL_DEPTH    10
 )

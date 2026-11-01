@@ -13,4 +13,8 @@ add_ip(
   CLOCK_PORT      clk
   STA_SDC         scripts/reset_controller.sdc
   SDC_INST_VAR    RSTCTL_INST
+  FORMAL_MULTICLOCK
+  FORMAL_TOP      reset_controller_formal
+  FORMAL_SOURCES  formal/reset_controller_formal.sv
+  FORMAL_DEPTH    40
 )

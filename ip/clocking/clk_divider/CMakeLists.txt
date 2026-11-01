@@ -16,4 +16,8 @@ add_ip(
   STA_SDC         scripts/clk_divider.sdc
   SDC_INST_VAR    DIV_INST
   SDC_VARS        "DIV_RATIO=5"
+  FORMAL_MULTICLOCK
+  FORMAL_TOP      clk_divider_formal
+  FORMAL_SOURCES  formal/clk_divider_formal.sv
+  FORMAL_DEPTH    30
 )

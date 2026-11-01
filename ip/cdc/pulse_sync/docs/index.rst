@@ -239,6 +239,10 @@ that works at one ratio can silently drop or duplicate events at another.
    * - ``tb/tb_cdc_pulse_sync.sv``
      - Portable self-checking smoke test at 10 ns / 27 ns, including a
        continuous check that ``dst_pulse`` is never wider than one cycle.
+   * - ``formal/cdc_pulse_sync_formal.sv``
+     - Proof with free-running clocks and independent resets: one
+       destination pulse per accepted source pulse, one cycle long, at most
+       one event in flight, src_busy high while it is.
 
 .. code-block:: bash
 

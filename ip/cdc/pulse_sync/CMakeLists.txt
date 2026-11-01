@@ -20,4 +20,8 @@ add_ip(
   SDC_INST_VAR    PULSE_SYNC_INST
   SDC_VARS        "PULSE_SRC_CLK=[get_clocks src_clk]" "PULSE_DST_CLK=[get_clocks dst_clk]"
   SDC_CLOCKS      dst_clk
+  FORMAL_MULTICLOCK
+  FORMAL_TOP      cdc_pulse_sync_formal
+  FORMAL_SOURCES  formal/cdc_pulse_sync_formal.sv
+  FORMAL_DEPTH    24
 )

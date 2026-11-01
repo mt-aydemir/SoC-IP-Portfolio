@@ -132,6 +132,10 @@ Arguments
        ``formal/<name>_formal.sv``.
    * - ``FORMAL_DEPTH``
      - Induction and cover depth. Defaults to 20.
+   * - ``FORMAL_MULTICLOCK``
+     - Prove with free-running clocks: every clock is a free input that may
+       change on any solver step. For blocks with several clocks or with
+       logic on both edges.
    * - ``FORMAL_PARAMS``
      - ``NAME=VALUE`` parameters of the wrapper. ``PARAMS`` do not apply:
        proofs run at small configurations of their own.

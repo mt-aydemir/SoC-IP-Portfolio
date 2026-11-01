@@ -204,6 +204,10 @@ correct clock gate from a broken one.
    * - ``tb/tb_clk_gate.sv``
      - Portable smoke test measuring every pulse with ``$realtime`` and
        checking that ``gated_clk`` never rises while the source clock is low.
+   * - ``formal/clk_gate_formal.sv``
+     - Proof with a free-running clock and enable changing at any
+       moment: no glitch, every gated pulse a whole high phase, and the
+       enable taken from the last low phase.
 
 .. code-block:: bash
 

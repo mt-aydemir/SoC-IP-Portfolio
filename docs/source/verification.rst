@@ -151,7 +151,7 @@ Writing a test module
 Formal proofs
 =============
 
-Twelve blocks also carry a property wrapper, ``formal/<name>_formal.sv``,
+Twenty blocks also carry a property wrapper, ``formal/<name>_formal.sv``,
 proved by SymbiYosys in the flow's stage 2c. Simulation shows that a block
 works on the traffic it was given; a proof shows it for every input
 sequence from reset.
@@ -188,6 +188,28 @@ What a wrapper contains
 The RTL is read with ``SYNTHESIS`` defined, so its simulation-only SVA,
 which uses constructs the free frontend does not parse, stays out.
 
+Clock-domain crossings and clocks
+---------------------------------
+
+Blocks with several clocks, or with logic on both edges, register
+``FORMAL_MULTICLOCK``. Their clocks are then ordinary free inputs, and each
+solver step may change any input, so every ratio and phase between clocks
+is explored, edges on the same step included. A flop clocked between two
+steps samples the earlier one, and captures nothing on the step its reset
+is released.
+
+That is also how metastability is covered. An input changing near a clock
+edge resolves, in silicon, to its old or its new value; with free clocks
+the solver places every input change on both sides of every edge, so both
+outcomes are explored. What is not modelled is metastability lasting past
+the next flop - the assumption every synchroniser is built on. Skew across
+a multi-bit bus is handled the way the designs handle it: the proofs
+assert that a bus is stable whenever the other domain samples it.
+
+Each reset is assumed low at the start and released once, at any time and
+in either order across domains - one reset per domain, as the headers
+specify.
+
 What is proved
 --------------
 
@@ -221,16 +243,38 @@ What is proved
    * - ``lfsr_rng``
      - Equivalence with a bit-serial model of the recurrence, seeding and
        stalls included; the state never reaches zero.
+   * - ``cdc_sync_2ff``, ``cdc_reset_sync``
+     - Exact latency after an input settles; asynchronous reset assertion
+       and release on exactly the STAGES-th clean edge.
+   * - ``cdc_pulse_sync``
+     - One destination pulse per accepted source pulse, one cycle long,
+       one event in flight, busy while in flight, under any clock ratio.
+   * - ``cdc_handshake``
+     - Every word delivered once, in order and intact, the payload stable
+       while the other domain may sample it, under any clock ratio.
+   * - ``clk_gate``
+     - No glitch: the gated clock changes only with the clock, and the
+       enable is taken from the last low phase.
+   * - ``clk_mux``
+     - The branch enables are exclusive and change only while their clock
+       is low; every output pulse is a whole high phase of one clock.
+   * - ``clk_divider``
+     - No glitch, a 50% duty cycle in half-periods at an odd and an even
+       divisor, enable behaviour and the ``clk_en`` period.
+   * - ``reset_controller``
+     - Exact release time of every stage after the asynchronous reset and
+       after a software reset; asynchronous assertion.
 
-A mutation campaign injected two or more bugs into each of these blocks;
-every proof failed on every mutant.
+A mutation campaign injected two or more bugs into each of these blocks -
+among them a clock gate without its latch, a mux enable moved to the wrong
+clock edge and a reset synchroniser with synchronous assertion; every
+proof failed on every mutant.
 
-Blocks without proofs are the CDC and clocking blocks, whose properties
-need multi-clock formal modelling of metastability; the DSP and crypto
-datapaths, where a proof at a useful width is beyond an SMT solver's
-reach on multipliers and S-boxes and simulation against independent models
-is the stronger evidence; and the peripherals, whose serial timing is
-checked in simulation.
+Blocks without proofs are the DSP and crypto datapaths, where a proof at a
+useful width is beyond an SMT solver's reach on multipliers and S-boxes and
+simulation against independent models is the stronger evidence; the
+memories and peripherals other than ``fifo_sync``, covered in simulation;
+and the ML accelerators other than ``mac_array``.
 
 .. code-block:: bash
 

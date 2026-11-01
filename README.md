@@ -13,7 +13,7 @@ IP that fails any stage does not ship.
 | **Targets** | FPGA and ASIC — no vendor primitives, no vendor attributes |
 | **Lint** | Verilator `-Wall`, zero warnings tolerated |
 | **Simulation** | cocotb, plus a self-checking SystemVerilog testbench per IP |
-| **Formal** | SymbiYosys k-induction proofs for twelve blocks |
+| **Formal** | SymbiYosys k-induction proofs for twenty blocks, CDC and clocking included |
 | **Synthesis** | Yosys, mapped to a generic reference standard cell library |
 | **Timing** | OpenSTA on the mapped netlist |
 | **Build** | CMake + Ninja, strictly out of source |

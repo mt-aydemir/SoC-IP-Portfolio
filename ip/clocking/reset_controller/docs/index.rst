@@ -277,6 +277,10 @@ fails whichever test happens to be running.
    * - ``tb/tb_reset_controller.sv``
      - Portable smoke test with a continuous release-order monitor and
        measured stage spacing.
+   * - ``formal/reset_controller_formal.sv``
+     - Proof with a free-running clock and an asynchronous
+       reset: the exact release cycle of every stage after the reset and
+       after sw_reset, and assertion at once.
 
 .. code-block:: bash
 

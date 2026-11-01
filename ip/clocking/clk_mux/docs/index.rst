@@ -287,6 +287,10 @@ narrowest source phase is a runt.
        must not report a clock that is not running.
    * - ``tb/tb_clk_mux.sv``
      - Portable smoke test at 10 ns / 27 ns measuring every output phase.
+   * - ``formal/clk_mux_formal.sv``
+     - Proof with free-running clocks and select changing at any
+       moment: exclusive enables, each changing only while its clock is low,
+       and every output pulse a whole high phase of one clock.
 
 .. code-block:: bash
 

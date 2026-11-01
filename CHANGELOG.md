@@ -11,6 +11,19 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Formal proofs for the CDC and clocking blocks.** `add_ip(FORMAL_MULTICLOCK)`
+  proves a block with its clocks as free inputs, so every ratio and phase
+  between clocks is explored and every input change lands on both sides of
+  every edge - the old-or-new outcome a synchroniser relies on metastability
+  to resolve to. Proved: `cdc_sync_2ff` and `cdc_reset_sync` latency and
+  asynchronous behaviour; `cdc_pulse_sync` one pulse per event with
+  independent resets; `cdc_handshake` ordered, intact delivery with the
+  payload stable while sampled; `clk_gate` and `clk_mux` glitch-free, every
+  output pulse a whole high phase of one clock; `clk_divider` a 50% duty
+  cycle at odd and even divisors; `reset_controller` the exact release cycle
+  of every stage. Sixteen injected bugs, among them a gate without its latch
+  and a mux enable on the wrong edge, all fail their proofs. Twenty blocks
+  now carry proofs.
 - **A formal stage: SymbiYosys proofs for twelve blocks.** `add_ip(FORMAL_TOP
   ...)` registers `formal.<category>.<name>`, which proves every assertion
   in the block's property wrapper by k-induction and requires every cover

@@ -17,4 +17,8 @@ add_ip(
   NO_STA
   STA_SDC         scripts/cdc_reset_sync.sdc
   SDC_INST_VAR    RST_SYNC_INST
+  FORMAL_MULTICLOCK
+  FORMAL_TOP      cdc_reset_sync_formal
+  FORMAL_SOURCES  formal/cdc_reset_sync_formal.sv
+  FORMAL_DEPTH    16
 )
