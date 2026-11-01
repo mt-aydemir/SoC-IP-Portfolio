@@ -11,6 +11,21 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`crypto` category: `lfsr_rng`, `sha256`, `aes128`.** A maximal-length
+  LFSR with a primitive polynomial for every width from 2 to 64 and any
+  number of bits per draw; a SHA-256 core over a 32-bit word stream that pads
+  messages of any byte length in hardware and overlaps loading with the
+  first sixteen rounds, 65 cycles per block; and an AES-128 core that
+  encrypts and decrypts, chosen per block, in eleven cycles, with the key
+  schedule computed on the fly forward and backward and S-box ROMs
+  generated from their FIPS-197 definition. Every check rests on something
+  the design does not share: the LFSR's polynomial is recovered from its
+  output by Berlekamp-Massey and proven primitive, and its period measured
+  exhaustively for every width up to 16; SHA-256 against `hashlib`, the
+  published FIPS 180-4 digests (the million-"a" message included) and a
+  textbook reference; AES against the FIPS-197 and AESAVS vectors and two
+  independent models with their own S-boxes. A mutation campaign confirmed
+  each suite catches injected bugs. The catalogue is now 43 IPs.
 - **`dsp` category: `fir`, `cic`, `iir`, `fft`.** A transposed-form FIR with
   run-time coefficients and an exact output; a Hogenauer CIC decimator with a
   run-time rate whose integrators wrap by design; a direct-form-I biquad with
