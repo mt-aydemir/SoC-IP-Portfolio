@@ -49,7 +49,7 @@ if {{[llength $_outputs] > 0}} {{
   set_output_delay -clock {clock} {io_delay} $_outputs
   set_load {load} $_outputs
 }}
-
+{sdc_block}
 # --- reports ---------------------------------------------------------------
 puts "=== setup (max) ==="
 report_checks -path_delay max -group_path_count 5 -digits 4
@@ -63,6 +63,20 @@ report_check_types -violators -digits 4
 puts "=== clocks ==="
 report_clock_properties
 exit
+"""
+
+# The block's own constraint fragment, sourced the way an integrator would,
+# with the instance name empty: the block is the top of the design. A Tcl
+# error in it - an unknown command above all, which is how a Synopsys-only
+# command shows up - fails the run instead of leaving a fragment that has
+# never been executed by any tool.
+SDC_BLOCK = """
+# --- the block's own constraint fragment -----------------------------------
+set {prefix}_INST ""
+if {{[catch {{source {sdc}}} _err]}} {{
+  puts "SDC FAILED: $_err"
+  exit
+}}
 """
 
 # OpenSTA prints "worst slack max 6.8641" / "worst slack min 0.0821"; older
@@ -90,6 +104,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--clock", default="clk")
     p.add_argument("--out-dir", required=True)
     p.add_argument("--report", required=True)
+    p.add_argument("--sdc", help="the block's constraint fragment to source")
     return p.parse_args()
 
 
@@ -107,7 +122,13 @@ def main() -> int:
     report = Path(args.report)
     report.parent.mkdir(parents=True, exist_ok=True)
 
+    sdc_block = ""
+    if args.sdc:
+        sdc = Path(args.sdc).resolve()
+        sdc_block = SDC_BLOCK.format(prefix=sdc.stem.upper(), sdc=sdc)
+
     script = STA_SCRIPT.format(
+        sdc_block=sdc_block,
         liberty=Path(args.liberty).resolve(),
         netlist=netlist.resolve(),
         top=args.top,
@@ -133,6 +154,11 @@ def main() -> int:
     if proc.returncode != 0:
         sys.stderr.write(log)
         sys.stderr.write(f"\nSTA FAILED: {args.name} (tool error)\n")
+        return 1
+
+    if "SDC FAILED" in log:
+        sys.stderr.write(log)
+        sys.stderr.write(f"\nSTA FAILED: {args.name} constraint fragment {args.sdc}\n")
         return 1
 
     slacks = [float(m) for m in SLACK_RE.findall(log)]

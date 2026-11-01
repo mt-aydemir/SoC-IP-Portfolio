@@ -12,6 +12,13 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/adder.sdc` used Synopsys-only collection commands that OpenSTA
+  and Vivado reject. It now uses commands common to all three, and
+  `ADDER_INST` is the instance's hierarchical name rather than a cell
+  object.
+
 ## [1.0.0] - 2026-10-31
 
 ### Added

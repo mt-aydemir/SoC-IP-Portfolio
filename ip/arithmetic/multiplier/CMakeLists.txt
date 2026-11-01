@@ -15,4 +15,5 @@ add_ip(
   PARAMS          A_WIDTH=16 B_WIDTH=16 SIGNED=1 LATENCY=2
   CLOCK_PERIOD_NS 5.0
   CLOCK_PORT      clk
+  STA_SDC         scripts/multiplier.sdc
 )

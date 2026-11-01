@@ -12,6 +12,13 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/cordic.sdc` used Synopsys-only collection commands that OpenSTA
+  and Vivado reject. It now uses commands common to all three, and
+  `CORDIC_INST` is the instance's hierarchical name rather than a cell
+  object.
+
 ## [1.0.0] - 2026-11-01
 
 ### Added

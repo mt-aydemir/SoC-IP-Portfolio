@@ -4,12 +4,16 @@
 # A portable constraint fragment for the block, written so that it can be
 # sourced from an integrating project's own SDC. It defines only what the
 # block itself requires; the integrator supplies the clock definition and the
-# I/O environment.
+# I/O environment. Only commands common to OpenSTA, Synopsys tools and
+# Vivado are used.
 #
 # Usage from the integrating project:
 #
-#   set COMPARATOR_INST [get_cells u_limit]
+#   set COMPARATOR_INST u_limit
 #   source ip/arithmetic/comparator/scripts/comparator.sdc
+#
+# COMPARATOR_INST is the instance's hierarchical name, not a cell object; an
+# empty string means the block is the top of the design.
 #
 # Copyright (c) 2026 SoC IP Portfolio Contributors
 # SPDX-License-Identifier: Apache-2.0
@@ -27,9 +31,9 @@
 #-----------------------------------------------------------------------------
 
 if {[info exists COMPARATOR_INST]} {
-    if {[sizeof_collection [get_cells -quiet $COMPARATOR_INST]] > 0} {
-        group_path -name comparator_decision \
-                   -through [get_cells $COMPARATOR_INST]
+    set _c [get_cells -quiet $COMPARATOR_INST]
+    if {[llength $_c] > 0} {
+        group_path -name comparator_decision -through $_c
     }
 }
 

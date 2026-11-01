@@ -54,6 +54,9 @@ endfunction()
 #   CATEGORY        IP family                    (default: parent dir name)
 #   CLOCK_PERIOD_NS target clock period for STA               (default: 10.0)
 #   CLOCK_PORT      name of the STA clock port                (default: clk)
+#   STA_SDC         the block's constraint fragment, relative to the IP
+#                   directory; sourced by the STA stage so that every command
+#                   in it is run by a real tool
 #   TIMESCALE       Verilator timescale                 (default: 1ns/1ps)
 #   SVTB            self-checking SystemVerilog testbench source, relative to
 #                   the IP directory; compiled with `verilator --binary`
@@ -69,7 +72,8 @@ endfunction()
 #-----------------------------------------------------------------------------
 function(add_ip)
   set(_opts    NO_LINT NO_SIM NO_SYNTH NO_STA)
-  set(_one     NAME TOP CATEGORY CLOCK_PERIOD_NS CLOCK_PORT TIMESCALE SVTB SVTB_TOP)
+  set(_one     NAME TOP CATEGORY CLOCK_PERIOD_NS CLOCK_PORT TIMESCALE SVTB SVTB_TOP
+               STA_SDC)
   set(_multi   SOURCES DEPENDS COCOTB_MODULES PARAMS LINT_ARGS SYNTH_ARGS)
   cmake_parse_arguments(IP "${_opts}" "${_one}" "${_multi}" ${ARGN})
 
@@ -323,6 +327,9 @@ function(add_ip)
         --clock    "${IP_CLOCK_PORT}"
         --out-dir  "${_out}/sta"
         --report   "${SOC_IP_REPORT_OUT}/sta/${IP_NAME}.rpt")
+    if(IP_STA_SDC)
+      list(APPEND _sta_cmd --sdc "${CMAKE_CURRENT_SOURCE_DIR}/${IP_STA_SDC}")
+    endif()
 
     add_custom_target(sta_${IP_NAME}
       COMMAND ${_sta_cmd}

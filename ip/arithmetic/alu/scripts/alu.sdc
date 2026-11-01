@@ -4,12 +4,16 @@
 # A portable constraint fragment for the block, written so that it can be
 # sourced from an integrating project's own SDC. It defines only what the
 # block itself requires; the integrator supplies the clock definition and the
-# I/O environment.
+# I/O environment. Only commands common to OpenSTA, Synopsys tools and
+# Vivado are used.
 #
 # Usage from the integrating project:
 #
-#   set ALU_INST [get_cells u_alu]
+#   set ALU_INST u_alu
 #   source ip/arithmetic/alu/scripts/alu.sdc
+#
+# ALU_INST is the instance's hierarchical name, not a cell object; an
+# empty string means the block is the top of the design.
 #
 # Copyright (c) 2026 SoC IP Portfolio Contributors
 # SPDX-License-Identifier: Apache-2.0
@@ -27,9 +31,12 @@
 #-----------------------------------------------------------------------------
 
 if {[info exists ALU_INST]} {
-    if {[sizeof_collection [get_cells -quiet $ALU_INST]] > 0} {
-        group_path -name alu_adder   -through [get_cells -quiet ${ALU_INST}/u_adder]
-        group_path -name alu_shifter -through [get_cells -quiet ${ALU_INST}/u_shifter]
+    set _prefix [expr {$ALU_INST eq "" ? "" : "$ALU_INST/"}]
+    foreach {_group _cell} {alu_adder u_adder alu_shifter u_shifter} {
+        set _c [get_cells -quiet ${_prefix}${_cell}]
+        if {[llength $_c] > 0} {
+            group_path -name $_group -through $_c
+        }
     }
 }
 

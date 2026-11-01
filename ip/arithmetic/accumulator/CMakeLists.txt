@@ -14,4 +14,5 @@ add_ip(
   PARAMS          DATA_WIDTH=16 ACC_WIDTH=32 SIGNED=1 SATURATE=1
   CLOCK_PERIOD_NS 5.0
   CLOCK_PORT      clk
+  STA_SDC         scripts/accumulator.sdc
 )

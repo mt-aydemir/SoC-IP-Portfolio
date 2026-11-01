@@ -4,12 +4,16 @@
 # A portable constraint fragment for the block, written so that it can be
 # sourced from an integrating project's own SDC. It defines only what the
 # block itself requires; the integrator supplies the clock definition and the
-# I/O environment.
+# I/O environment. Only commands common to OpenSTA, Synopsys tools and
+# Vivado are used.
 #
 # Usage from the integrating project:
 #
-#   set BARREL_SHIFTER_INST [get_cells u_shift]
+#   set BARREL_SHIFTER_INST u_shift
 #   source ip/arithmetic/barrel_shifter/scripts/barrel_shifter.sdc
+#
+# BARREL_SHIFTER_INST is the instance's hierarchical name, not a cell object; an
+# empty string means the block is the top of the design.
 #
 # Copyright (c) 2026 SoC IP Portfolio Contributors
 # SPDX-License-Identifier: Apache-2.0
@@ -39,9 +43,9 @@
 #-----------------------------------------------------------------------------
 
 if {[info exists BARREL_SHIFTER_INST]} {
-    if {[sizeof_collection [get_cells -quiet $BARREL_SHIFTER_INST]] > 0} {
-        group_path -name barrel_shifter_tree \
-                   -through [get_cells $BARREL_SHIFTER_INST]
+    set _c [get_cells -quiet $BARREL_SHIFTER_INST]
+    if {[llength $_c] > 0} {
+        group_path -name barrel_shifter_tree -through $_c
     }
 }
 

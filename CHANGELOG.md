@@ -80,6 +80,17 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **The `arithmetic` timing constraints had never been run by any tool.** No
+  stage sourced the per-IP `.sdc` fragments, and all ten used Synopsys-only
+  collection commands (`sizeof_collection`, `remove_from_collection`) that
+  OpenSTA and Vivado reject. Their usage also built sub-instance paths by
+  appending to a cell object, which no tool resolves. They now use commands
+  common to all three and take the instance as a hierarchical name. The new
+  `add_ip(STA_SDC ...)` makes the timing stage source a fragment, which the
+  five sequential arithmetic blocks use - `mac` now reports its multiplier
+  and accumulator path groups - and `repo.sdc_portable` rejects
+  non-portable commands in every fragment, with the twelve older `cdc`,
+  `clocking` and `memory` fragments listed as still to convert.
 - **`subtractor`: `overflow` was inverted in the unsigned configuration.** It
   was forwarded from the internal adder, whose unsigned overflow is its carry
   out — which for `a + ~b + ~borrow_in` means *no* underflow. Found by the new

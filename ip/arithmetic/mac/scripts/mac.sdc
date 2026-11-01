@@ -4,22 +4,20 @@
 # A portable constraint fragment for the block, written so that it can be
 # sourced from an integrating project's own SDC. It defines only what the
 # block itself requires; the integrator supplies the real clock definition and
-# the I/O environment.
+# the I/O environment. Only commands common to OpenSTA, Synopsys tools and
+# Vivado are used.
 #
 # Usage from the integrating project:
 #
-#   set MAC_INST [get_cells u_mac]
-#   set MAC_CLK  [get_clocks clk_core]
+#   set MAC_INST u_mac
 #   source ip/arithmetic/mac/scripts/mac.sdc
+#
+# MAC_INST is the instance's hierarchical name, not a cell object; an
+# empty string means the block is the top of the design.
 #
 # Copyright (c) 2026 SoC IP Portfolio Contributors
 # SPDX-License-Identifier: Apache-2.0
 #=============================================================================
-
-if {![info exists MAC_CLK]} {
-    puts "mac.sdc: MAC_CLK is not set; using the design's first clock"
-    set MAC_CLK [lindex [all_clocks] 0]
-}
 
 #-----------------------------------------------------------------------------
 # One synchronous pipeline in one clock domain: no crossing, no multi-cycle
@@ -46,26 +44,18 @@ if {![info exists MAC_CLK]} {
 #-----------------------------------------------------------------------------
 
 if {[info exists MAC_INST]} {
-    if {[sizeof_collection [get_cells -quiet $MAC_INST]] > 0} {
-        group_path -name mac_multiplier \
-                   -through [get_cells -quiet ${MAC_INST}/u_multiplier]
-        group_path -name mac_accumulator \
-                   -through [get_cells -quiet ${MAC_INST}/u_accumulator]
+    set _prefix [expr {$MAC_INST eq "" ? "" : "$MAC_INST/"}]
+    foreach {_group _cell} {mac_multiplier u_multiplier mac_accumulator u_accumulator} {
+        set _c [get_cells -quiet ${_prefix}${_cell}]
+        if {[llength $_c] > 0} {
+            group_path -name $_group -through $_c
+        }
     }
 }
 
 #-----------------------------------------------------------------------------
-# Standalone analysis, used by scripts/run_sta.py when the block is timed on
-# its own. The integrating project overrides all of this.
+# Standalone analysis. scripts/run_sta.py sets the clock and the I/O
+# environment itself, then sources this file with MAC_INST set to "":
+# the block as the top of the design, which is how the stage checks that
+# every command above runs in OpenSTA.
 #-----------------------------------------------------------------------------
-if {![info exists MAC_INST]} {
-    set _period [get_property $MAC_CLK period]
-    set _inputs [remove_from_collection [all_inputs] [get_ports -quiet clk]]
-
-    if {[sizeof_collection $_inputs] > 0} {
-        set_input_delay -clock $MAC_CLK [expr {$_period * 0.20}] $_inputs
-    }
-    if {[sizeof_collection [all_outputs]] > 0} {
-        set_output_delay -clock $MAC_CLK [expr {$_period * 0.20}] [all_outputs]
-    }
-}

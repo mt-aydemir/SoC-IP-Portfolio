@@ -4,22 +4,20 @@
 # A portable constraint fragment for the block, written so that it can be
 # sourced from an integrating project's own SDC. It defines only what the
 # block itself requires; the integrator supplies the real clock definition and
-# the I/O environment.
+# the I/O environment. Only commands common to OpenSTA, Synopsys tools and
+# Vivado are used.
 #
 # Usage from the integrating project:
 #
-#   set MULTIPLIER_INST [get_cells u_mul]
-#   set MULTIPLIER_CLK  [get_clocks clk_core]
+#   set MULTIPLIER_INST u_mul
 #   source ip/arithmetic/multiplier/scripts/multiplier.sdc
+#
+# MULTIPLIER_INST is the instance's hierarchical name, not a cell object; an
+# empty string means the block is the top of the design.
 #
 # Copyright (c) 2026 SoC IP Portfolio Contributors
 # SPDX-License-Identifier: Apache-2.0
 #=============================================================================
-
-if {![info exists MULTIPLIER_CLK]} {
-    puts "multiplier.sdc: MULTIPLIER_CLK is not set; using the design's first clock"
-    set MULTIPLIER_CLK [lindex [all_clocks] 0]
-}
 
 #-----------------------------------------------------------------------------
 # The block is a single synchronous pipeline in one clock domain. It contains
@@ -39,27 +37,15 @@ if {![info exists MULTIPLIER_CLK]} {
 #-----------------------------------------------------------------------------
 
 if {[info exists MULTIPLIER_INST]} {
-    if {[sizeof_collection [get_cells -quiet $MULTIPLIER_INST]] > 0} {
-        group_path -name multiplier_array -through [get_cells $MULTIPLIER_INST]
+    set _c [get_cells -quiet $MULTIPLIER_INST]
+    if {[llength $_c] > 0} {
+        group_path -name multiplier_array -through $_c
     }
 }
 
 #-----------------------------------------------------------------------------
-# Standalone analysis, used by scripts/run_sta.py when the block is timed on
-# its own. The integrating project overrides all of this.
-#
-# Inputs and outputs are given 20% of the period, which leaves the internal
-# path the remaining 60% and keeps the reported slack a statement about the
-# block rather than about an arbitrary I/O budget.
+# Standalone analysis. scripts/run_sta.py sets the clock and the I/O
+# environment itself, then sources this file with MULTIPLIER_INST set to "":
+# the block as the top of the design, which is how the stage checks that
+# every command above runs in OpenSTA.
 #-----------------------------------------------------------------------------
-if {![info exists MULTIPLIER_INST]} {
-    set _period [get_property $MULTIPLIER_CLK period]
-    set _inputs [remove_from_collection [all_inputs] [get_ports -quiet clk]]
-
-    if {[sizeof_collection $_inputs] > 0} {
-        set_input_delay -clock $MULTIPLIER_CLK [expr {$_period * 0.20}] $_inputs
-    }
-    if {[sizeof_collection [all_outputs]] > 0} {
-        set_output_delay -clock $MULTIPLIER_CLK [expr {$_period * 0.20}] [all_outputs]
-    }
-}

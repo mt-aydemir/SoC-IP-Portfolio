@@ -21,4 +21,9 @@ if(SOC_IP_PYTHON)
     COMMAND "${SOC_IP_PYTHON}" "${CMAKE_CURRENT_SOURCE_DIR}/test_no_source_pollution.py"
             --root "${CMAKE_SOURCE_DIR}")
   set_tests_properties(repo.no_source_pollution PROPERTIES LABELS "repo" TIMEOUT 120)
+
+  add_test(NAME repo.sdc_portable
+    COMMAND "${SOC_IP_PYTHON}" "${CMAKE_CURRENT_SOURCE_DIR}/test_sdc_portable.py"
+            --root "${CMAKE_SOURCE_DIR}")
+  set_tests_properties(repo.sdc_portable PROPERTIES LABELS "repo" TIMEOUT 120)
 endif()

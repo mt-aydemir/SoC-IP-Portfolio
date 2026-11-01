@@ -98,6 +98,12 @@ Arguments
      - Target period for static timing analysis. Defaults to 10.0.
    * - ``CLOCK_PORT``
      - Name of the clock port constrained by OpenSTA. Defaults to ``clk``.
+   * - ``STA_SDC``
+     - The block's constraint fragment, relative to the IP directory. The
+       timing stage sources it with the instance name set to the empty
+       string, so every command in it is run by OpenSTA and a command that
+       tool does not have fails the stage. ``ctest -L repo`` separately
+       rejects Synopsys-only collection commands in every fragment.
    * - ``NO_LINT`` ``NO_SIM`` ``NO_SYNTH`` ``NO_STA``
      - Opt out of a stage. Used only where a stage is meaningless, for example
        timing analysis on a purely combinational block.

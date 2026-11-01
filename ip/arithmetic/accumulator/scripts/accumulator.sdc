@@ -4,22 +4,20 @@
 # A portable constraint fragment for the block, written so that it can be
 # sourced from an integrating project's own SDC. It defines only what the
 # block itself requires; the integrator supplies the real clock definition and
-# the I/O environment.
+# the I/O environment. Only commands common to OpenSTA, Synopsys tools and
+# Vivado are used.
 #
 # Usage from the integrating project:
 #
-#   set ACCUMULATOR_INST [get_cells u_acc]
-#   set ACCUMULATOR_CLK  [get_clocks clk_core]
+#   set ACCUMULATOR_INST u_acc
 #   source ip/arithmetic/accumulator/scripts/accumulator.sdc
+#
+# ACCUMULATOR_INST is the instance's hierarchical name, not a cell object; an
+# empty string means the block is the top of the design.
 #
 # Copyright (c) 2026 SoC IP Portfolio Contributors
 # SPDX-License-Identifier: Apache-2.0
 #=============================================================================
-
-if {![info exists ACCUMULATOR_CLK]} {
-    puts "accumulator.sdc: ACCUMULATOR_CLK is not set; using the design's first clock"
-    set ACCUMULATOR_CLK [lindex [all_clocks] 0]
-}
 
 #-----------------------------------------------------------------------------
 # One synchronous register in one clock domain: no crossing, no multi-cycle
@@ -40,24 +38,15 @@ if {![info exists ACCUMULATOR_CLK]} {
 #-----------------------------------------------------------------------------
 
 if {[info exists ACCUMULATOR_INST]} {
-    if {[sizeof_collection [get_cells -quiet $ACCUMULATOR_INST]] > 0} {
-        group_path -name accumulator_feedback \
-                   -through [get_cells $ACCUMULATOR_INST]
+    set _c [get_cells -quiet $ACCUMULATOR_INST]
+    if {[llength $_c] > 0} {
+        group_path -name accumulator_feedback -through $_c
     }
 }
 
 #-----------------------------------------------------------------------------
-# Standalone analysis, used by scripts/run_sta.py when the block is timed on
-# its own. The integrating project overrides all of this.
+# Standalone analysis. scripts/run_sta.py sets the clock and the I/O
+# environment itself, then sources this file with ACCUMULATOR_INST set to "":
+# the block as the top of the design, which is how the stage checks that
+# every command above runs in OpenSTA.
 #-----------------------------------------------------------------------------
-if {![info exists ACCUMULATOR_INST]} {
-    set _period [get_property $ACCUMULATOR_CLK period]
-    set _inputs [remove_from_collection [all_inputs] [get_ports -quiet clk]]
-
-    if {[sizeof_collection $_inputs] > 0} {
-        set_input_delay -clock $ACCUMULATOR_CLK [expr {$_period * 0.20}] $_inputs
-    }
-    if {[sizeof_collection [all_outputs]] > 0} {
-        set_output_delay -clock $ACCUMULATOR_CLK [expr {$_period * 0.20}] [all_outputs]
-    }
-}
