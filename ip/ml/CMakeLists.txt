@@ -9,5 +9,6 @@ add_ip_category(ml
   systolic_pe
   requant_int8
   systolic_array
+  mac_array
   cnn_accel
 )

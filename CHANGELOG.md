@@ -11,6 +11,19 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`ml/mac_array`, the last block of the original tree.** A pipelined
+  dot-product engine: `LANES` exact products per cycle, any mix of signed
+  and unsigned operands (uint8 activations against int8 weights included),
+  a registered adder tree, and accumulation over the beats of a vector of
+  any length. It complements `systolic_array` for layers with no weight
+  reuse. Flow control is by credits into a small output FIFO, so the
+  pipeline never stalls and `m_ready` reaches neither `s_ready` nor the
+  pipeline; a first version that stalled every register from `m_ready`
+  missed timing at 5 ns and was replaced. Checked against a model and
+  `numpy.dot` at seven parameter sets, and in the SV testbench at a padded
+  tree with a wrapping accumulator. Of ten injected mutants nine are caught;
+  the tenth was equivalent, exposing a redundant gate that was removed. The
+  catalogue is now 44 IPs and the original README tree is complete.
 - **`crypto` category: `lfsr_rng`, `sha256`, `aes128`.** A maximal-length
   LFSR with a primitive polynomial for every width from 2 to 64 and any
   number of bits per draw; a SHA-256 core over a 32-bit word stream that pads

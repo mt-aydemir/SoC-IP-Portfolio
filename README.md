@@ -20,7 +20,7 @@ IP that fails any stage does not ship.
 
 ## Catalogue
 
-43 IP blocks, each passing every stage of the flow, plus two integration
+44 IP blocks, each passing every stage of the flow, plus two integration
 examples.
 
 ```
@@ -31,7 +31,8 @@ ip/
 │                 fifo_async  bram_ctrl
 ├── arithmetic/   adder  subtractor  comparator  barrel_shifter  multiplier
 │                 accumulator  mac  alu  divider  cordic
-├── ml/           systolic_pe  systolic_array  requant_int8  cnn_accel
+├── ml/           systolic_pe  systolic_array  mac_array  requant_int8
+│                 cnn_accel
 ├── peripherals/  gpio  uart  spi_master  i2c_master
 ├── bus/          apb_slave  axi4_lite_slave  axi4_stream_slice
 ├── dsp/          fir  cic  iir  fft
