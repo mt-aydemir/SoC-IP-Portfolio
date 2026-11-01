@@ -11,6 +11,16 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`dsp` category: `fir`, `cic`, `iir`, `fft`.** A transposed-form FIR with
+  run-time coefficients and an exact output; a Hogenauer CIC decimator with a
+  run-time rate whose integrators wrap by design; a direct-form-I biquad with
+  rounding, saturation of the fed-back state and a clip flag; and a burst
+  radix-2 FFT/IFFT with a generated quarter-wave twiddle ROM. Each is
+  bit-exact against a reference model written from its header, and each has
+  an independent check that shares nothing with that model:
+  `numpy.convolve`, numpy moving sums, a floating-point biquad within the
+  rounding-noise bound through 1/A(z), and both `numpy.fft` and a direct
+  DFT in the SV testbench. The catalogue is now 40 IPs.
 - **`bus` category: `apb_slave`, `axi4_lite_slave`, `axi4_stream_slice`.**
   The two register slaves bridge APB4 and AXI4-Lite onto one shared
   ready/valid register request port, so register logic written once sits

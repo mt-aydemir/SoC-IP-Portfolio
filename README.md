@@ -20,7 +20,7 @@ IP that fails any stage does not ship.
 
 ## Catalogue
 
-36 IP blocks, each passing every stage of the flow, plus two integration
+40 IP blocks, each passing every stage of the flow, plus two integration
 examples. Categories marked *planned* are registered in the build order but
 not yet implemented.
 
@@ -35,7 +35,7 @@ ip/
 ├── ml/           systolic_pe  systolic_array  requant_int8  cnn_accel
 ├── peripherals/  gpio  uart  spi_master  i2c_master
 ├── bus/          apb_slave  axi4_lite_slave  axi4_stream_slice
-├── dsp/          planned: fir  iir  fft  cic
+├── dsp/          fir  cic  iir  fft
 └── crypto/       planned: aes128  sha256  lfsr_rng
 
 examples/         nco (accumulator + cordic)
