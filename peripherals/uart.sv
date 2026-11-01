@@ -60,6 +60,9 @@ module uart #(
     logic [3:0]  rx_bitcnt;
     logic        rx_busy;
 
+    // Bir sonraki kaydirma degeri (LSB-first: yeni bit MSB'ye girer, saga kayar)
+    wire [DATA_BITS-1:0] rx_shift_next = {rxd, rx_shift[DATA_BITS-1:1]};
+
     always_ff @(posedge clk or posedge reset) begin
         if (reset) begin
             rx_cnt    <= 0;
@@ -79,12 +82,19 @@ module uart #(
             end else begin
                 if (rx_cnt == BAUD_DIV-1) begin
                     rx_cnt <= 0;
-                    rx_shift <= {rxd, rx_shift[DATA_BITS-1:1]};
-                    rx_bitcnt <= rx_bitcnt + 1;
-                    if (rx_bitcnt == DATA_BITS) begin
-                        rx_data  <= rx_shift;
-                        rx_valid <= 1;
-                        rx_busy  <= 0;
+                    if (rx_bitcnt == 0) begin
+                        // Start bitinin ortasindayiz: sadece dogrula, veri kaydirma.
+                        // Bir sonraki ornekleme 1 bit sonra = ilk veri bitinin ortasi.
+                        rx_bitcnt <= 1;
+                    end else begin
+                        rx_shift <= rx_shift_next;
+                        if (rx_bitcnt == DATA_BITS) begin
+                            rx_data  <= rx_shift_next;  // son (8.) veri biti dahil
+                            rx_valid <= 1;
+                            rx_busy  <= 0;
+                        end else begin
+                            rx_bitcnt <= rx_bitcnt + 1;
+                        end
                     end
                 end else begin
                     rx_cnt <= rx_cnt + 1;
