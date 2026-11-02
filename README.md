@@ -54,6 +54,10 @@ cmake -S . -B build -G Ninja
 ctest --test-dir build --output-on-failure
 ```
 
+The checkout and build paths must not contain spaces, a limit of GNU Make
+that Verilator enforces. A checkout under such a path is built through a
+relative symlink; see `docs/source/getting_started.rst`.
+
 Useful targets and filters:
 
 ```bash

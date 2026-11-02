@@ -9,6 +9,7 @@ working directory.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -43,7 +44,7 @@ def main() -> int:
     parser.add_argument("--root", required=True)
     args = parser.parse_args()
 
-    root = Path(args.root).resolve()
+    root = Path(os.path.abspath(args.root))
     offenders: list[str] = []
 
     for path in root.rglob("*"):

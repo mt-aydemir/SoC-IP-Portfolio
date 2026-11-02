@@ -57,7 +57,30 @@ Configure and build
    cmake -S . -B build -G Ninja
 
 The configure step prints a summary of every tool it located and the number of
-registered IP blocks. Build targets:
+registered IP blocks.
+
+Paths with spaces
+-----------------
+
+Neither the checkout path nor the build directory may contain a space. GNU
+Make cannot build in such a directory - Verilator refuses with "GNU Make
+cannot build in directories containing spaces" - and Yosys scripts split
+their arguments on spaces. A checkout that has to live under such a path is
+reached through a relative symlink beside it, and built in the Linux file
+system, which is also much faster than ``/mnt``:
+
+.. code-block:: bash
+
+   cd "/mnt/d/Projects"
+   ln -s "Computer Architecture/SoC-IP-Portfolio" soc-ip-portfolio
+   cmake -S /mnt/d/Projects/soc-ip-portfolio -B ~/builds/soc-ip-portfolio -G Ninja
+
+The symlink must be relative and on the same drive: the WebAssembly Yosys
+runs in a WASI sandbox that maps each top-level directory separately and does
+not follow a symlink out of one into another. The flow's scripts make paths
+absolute without resolving symlinks, so the space never reappears.
+
+Build targets:
 
 .. code-block:: bash
 

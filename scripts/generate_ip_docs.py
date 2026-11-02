@@ -17,6 +17,7 @@ build.
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -193,8 +194,8 @@ def main() -> int:
                         help="destination source tree, inside the build directory")
     args = parser.parse_args()
 
-    root = Path(args.root).resolve()
-    stage = Path(args.stage).resolve()
+    root = Path(os.path.abspath(args.root))
+    stage = Path(os.path.abspath(args.stage))
 
     if stage.is_relative_to(root / "docs"):
         sys.stderr.write(

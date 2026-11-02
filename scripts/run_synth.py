@@ -11,6 +11,7 @@ synthesisable and a relative area figure that can be tracked over time.
 from __future__ import annotations
 
 import argparse
+import os
 import json
 import re
 import subprocess
@@ -93,7 +94,7 @@ def build_script(args: argparse.Namespace, out_dir: Path,
                  with_params: bool = True) -> str:
     defines = " ".join(f"-D{d}" for d in ["SYNTHESIS"] + args.define)
     read_cmds = "\n".join(
-        f"read_verilog -sv {defines} {Path(s).resolve()}" for s in args.sources)
+        f"read_verilog -sv {defines} {Path(os.path.abspath(s))}" for s in args.sources)
 
     chparams = ""
     if with_params:
@@ -105,7 +106,7 @@ def build_script(args: argparse.Namespace, out_dir: Path,
         read_cmds=read_cmds,
         top=args.top,
         chparams=chparams,
-        liberty=Path(args.liberty).resolve(),
+        liberty=Path(os.path.abspath(args.liberty)),
         netlist=out_dir / f"{args.name}.mapped.v",
         json_out=out_dir / f"{args.name}.netlist.json",
         stat_json=out_dir / f"{args.name}.stat.json",
@@ -179,7 +180,7 @@ def main() -> int:
         # configurations must check this flag.
         "parameters_applied": parameters_applied,
         "netlist": str(netlist),
-        "liberty": str(Path(args.liberty).resolve()),
+        "liberty": str(Path(os.path.abspath(args.liberty))),
         **summarise(out_dir / f"{args.name}.stat.json", log),
     }
     report.write_text(json.dumps(result, indent=2), encoding="utf-8")

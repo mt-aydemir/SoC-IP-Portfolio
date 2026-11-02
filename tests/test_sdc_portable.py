@@ -9,6 +9,7 @@ fail late: a Tcl body inside an ``if`` is not even parsed until it runs.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
@@ -25,7 +26,7 @@ NON_PORTABLE = re.compile(
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--root", required=True)
-    root = Path(p.parse_args().root).resolve()
+    root = Path(os.path.abspath(p.parse_args().root))
 
     problems: list[str] = []
     for sdc in sorted((root / "ip").glob("*/*/scripts/*.sdc")):

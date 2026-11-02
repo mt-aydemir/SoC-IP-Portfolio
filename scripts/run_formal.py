@@ -71,7 +71,7 @@ def probe_pragmas(sources: list[str]) -> list[tuple[str, str]]:
 
 
 def sby_text(args: argparse.Namespace) -> str:
-    reads = "\n".join(f"read_verilog -formal -sv -DSYNTHESIS -DFORMAL {Path(s).resolve()}"
+    reads = "\n".join(f"read_verilog -formal -sv -DSYNTHESIS -DFORMAL {Path(os.path.abspath(s))}"
                       for s in args.sources)
     params = "\n".join(f"chparam -set {k} {v} {args.top}"
                        for k, v in (p.split("=", 1) for p in args.param))
@@ -114,9 +114,9 @@ def tool_env(sby: str) -> dict[str, str]:
 
 def main() -> int:
     args = parse_args()
-    out_dir = Path(args.out_dir).resolve()
+    out_dir = Path(os.path.abspath(args.out_dir))
     out_dir.mkdir(parents=True, exist_ok=True)
-    report = Path(args.report).resolve()
+    report = Path(os.path.abspath(args.report))
     report.parent.mkdir(parents=True, exist_ok=True)
 
     sby_file = out_dir / f"{args.name}.sby"

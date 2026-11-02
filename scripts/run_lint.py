@@ -62,7 +62,7 @@ def main() -> int:
         name, _, value = p.partition("=")
         # Verilator requires the value attached to the switch: -GNAME=VALUE.
         cmd.append(f"-G{name.strip()}={value.strip()}")
-    cmd += [str(Path(s).resolve()) for s in args.sources]
+    cmd += [str(Path(os.path.abspath(s))) for s in args.sources]
 
     proc = subprocess.run(cmd, capture_output=True, text=True)
     output = proc.stdout + proc.stderr

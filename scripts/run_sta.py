@@ -11,6 +11,7 @@ A negative worst slack fails the run, so timing regressions are caught by
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -157,7 +158,7 @@ def check_only(args: argparse.Namespace, netlist: Path, out_dir: Path,
         f"create_clock -name {c} -period {args.period:.4f} [get_ports {{{c}}}]\n"
         for c in [args.clock, *args.extra_clock])
     script = CHECK_SCRIPT.format(
-        liberty=Path(args.liberty).resolve(), netlist=netlist.resolve(),
+        liberty=Path(os.path.abspath(args.liberty)), netlist=Path(os.path.abspath(netlist)),
         top=args.top, clocks=clocks, sdc_block=sdc_block)
     code, log = run(args, script, out_dir / f"{args.name}.sdc.tcl", report,
                     f"constraint check, top={args.top}")
@@ -185,7 +186,7 @@ def main() -> int:
 
     sdc_block = ""
     if args.sdc:
-        sdc = Path(args.sdc).resolve()
+        sdc = Path(os.path.abspath(args.sdc))
         variables = "".join(
             f"set {name} {value}\n"
             for name, value in (v.split("=", 1) for v in args.sdc_var))
@@ -199,8 +200,8 @@ def main() -> int:
 
     script = STA_SCRIPT.format(
         sdc_block=sdc_block,
-        liberty=Path(args.liberty).resolve(),
-        netlist=netlist.resolve(),
+        liberty=Path(os.path.abspath(args.liberty)),
+        netlist=Path(os.path.abspath(netlist)),
         top=args.top,
         clock=args.clock,
         period=f"{args.period:.4f}",

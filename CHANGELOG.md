@@ -163,6 +163,16 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **A fresh clone failed the documentation build.** `docs/source/_static` was
+  an empty directory, which git does not record, so Sphinx's `-W` turned the
+  missing `html_static_path` into an error in every checkout but the one it
+  was written in. The directory now holds a `.gitkeep`.
+- **The flow can run from a path that contains spaces.** GNU Make, and so
+  Verilator, cannot build in such a directory, and the drivers' `resolve()`
+  calls followed any space-free symlink straight back to it. The drivers now
+  make paths absolute without resolving symlinks, and the getting-started
+  guide describes the relative symlink and out-of-tree build that a path with
+  spaces needs.
 - **The `arithmetic` timing constraints had never been run by any tool.** No
   stage sourced the per-IP `.sdc` fragments, and all ten used Synopsys-only
   collection commands (`sizeof_collection`, `remove_from_collection`) that

@@ -114,9 +114,9 @@ def collect_waves(build_dir: Path, wave_dir: Path, name: str, module: str) -> li
 def main() -> int:
     args = parse_args()
 
-    build_dir = Path(args.build_dir).resolve()
+    build_dir = Path(os.path.abspath(args.build_dir))
     build_dir.mkdir(parents=True, exist_ok=True)
-    src_test_dir = Path(args.test_dir).resolve()
+    src_test_dir = Path(os.path.abspath(args.test_dir))
     if not src_test_dir.is_dir():
         sys.stderr.write(f"test directory not found: {src_test_dir}\n")
         return 1
@@ -127,7 +127,7 @@ def main() -> int:
     run_dir = build_dir / "run"
     run_dir.mkdir(parents=True, exist_ok=True)
 
-    sources = [str(Path(s).resolve()) for s in args.sources]
+    sources = [str(Path(os.path.abspath(s))) for s in args.sources]
     parameters = {}
     for item in args.param:
         key, _, value = item.partition("=")
@@ -149,7 +149,7 @@ def main() -> int:
     os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
     sys.dont_write_bytecode = True
 
-    verif_lib = Path(__file__).resolve().parent.parent / "verification" / "lib"
+    verif_lib = Path(os.path.abspath(__file__)).parent.parent / "verification" / "lib"
     for extra_path in (str(verif_lib), str(src_test_dir)):
         if extra_path not in sys.path:
             sys.path.insert(0, extra_path)

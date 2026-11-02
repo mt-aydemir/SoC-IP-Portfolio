@@ -20,6 +20,7 @@ What it does:
 from __future__ import annotations
 
 import argparse
+import os
 import datetime as _dt
 import re
 import shutil
@@ -112,8 +113,8 @@ def register(category_dir: Path, category: str, name: str) -> str:
 def main() -> int:
     args = parse_args()
 
-    root = Path(args.root).resolve() if args.root \
-        else Path(__file__).resolve().parent.parent
+    root = Path(os.path.abspath(args.root)) if args.root \
+        else Path(os.path.abspath(__file__)).parent.parent
     template = root / "templates" / "ip_template"
     if not template.is_dir():
         sys.stderr.write(f"template not found: {template}\n")

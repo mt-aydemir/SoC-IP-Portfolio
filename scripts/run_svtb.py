@@ -13,6 +13,7 @@ mistaken for a success.
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -43,9 +44,9 @@ def main() -> int:
     # Verilator is invoked with out_dir as its working directory, so every
     # path handed to it must be absolute: a relative --Mdir would be resolved
     # against out_dir itself and land one level deeper than intended.
-    out_dir = Path(args.out_dir).resolve()
+    out_dir = Path(os.path.abspath(args.out_dir))
     out_dir.mkdir(parents=True, exist_ok=True)
-    report = Path(args.report).resolve()
+    report = Path(os.path.abspath(args.report))
     report.parent.mkdir(parents=True, exist_ok=True)
 
     exe = out_dir / args.name
@@ -59,14 +60,14 @@ def main() -> int:
         "--timescale", args.timescale,
         "--top-module", args.top,
         "--Mdir", str(out_dir),
-        "-o", str(exe.resolve()),
+        "-o", str(Path(os.path.abspath(exe))),
     ]
     if args.waves:
         build_cmd += ["--trace", "--trace-structs"]
     for item in args.param:
         key, _, value = item.partition("=")
         build_cmd.append(f"-G{key.strip()}={value.strip()}")
-    build_cmd += [str(Path(s).resolve()) for s in args.sources]
+    build_cmd += [str(Path(os.path.abspath(s))) for s in args.sources]
 
     build = subprocess.run(build_cmd, capture_output=True, text=True,
                            cwd=str(out_dir))
