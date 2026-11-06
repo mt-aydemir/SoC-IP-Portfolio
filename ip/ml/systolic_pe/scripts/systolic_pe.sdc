@@ -3,8 +3,12 @@
 #
 # Usage from the integrating project:
 #
-#   set PE_INST [get_cells u_array/g_row[0].g_col[0].u_pe]
+#   set PE_INST u_pe
 #   source ip/ml/systolic_pe/scripts/systolic_pe.sdc
+#
+# PE_INST is the instance's hierarchical name, not a cell object, and an empty
+# string means the block is the top of the design. Only commands common to
+# OpenSTA, Synopsys tools and Vivado are used.
 #
 # Copyright (c) 2026 SoC IP Portfolio Contributors
 # SPDX-License-Identifier: Apache-2.0
@@ -14,6 +18,7 @@ if {![info exists PE_INST]} {
     puts "systolic_pe.sdc: PE_INST is not set; nothing to constrain"
     return
 }
+set _p [expr {$PE_INST eq "" ? "" : "$PE_INST/"}]
 
 #-----------------------------------------------------------------------------
 # The element needs no timing exceptions.
@@ -40,13 +45,9 @@ if {![info exists PE_INST]} {
 # multiply-accumulate was inferred into a DSP block at all or was built out of
 # fabric, which costs roughly a factor of three in period.
 #-----------------------------------------------------------------------------
-if {[info exists PE_REPORT] && $PE_REPORT} {
-    report_timing -from [get_pins -quiet ${PE_INST}/psum_in*] \
-                  -to   [get_pins -quiet ${PE_INST}/psum_out*] \
-                  -max_paths 1
-    report_timing -from [get_pins -quiet ${PE_INST}/a_in*] \
-                  -to   [get_pins -quiet ${PE_INST}/psum_out*] \
-                  -max_paths 1
+set _nets [get_nets -quiet ${_p}psum_in*]
+if {[llength $_nets] > 0} {
+    group_path -name systolic_pe_accumulate -through $_nets
 }
 
 #-----------------------------------------------------------------------------

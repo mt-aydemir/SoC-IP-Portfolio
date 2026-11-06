@@ -10,4 +10,6 @@ add_ip(
   PARAMS          DATA_WIDTH=8 ACC_WIDTH=32
   CLOCK_PERIOD_NS 4.0
   CLOCK_PORT      clk
+  STA_SDC         scripts/systolic_pe.sdc
+  SDC_INST_VAR    PE_INST
 )

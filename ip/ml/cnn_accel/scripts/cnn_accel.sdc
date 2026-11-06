@@ -3,9 +3,12 @@
 #
 # Usage from the integrating project:
 #
-#   set ACCEL_INST [get_cells design_1_i/cnn_accel_0/inst]
-#   set ACCEL_CLK  [get_clocks clk_pl_0]
+#   set ACCEL_INST u_accel
 #   source ip/ml/cnn_accel/scripts/cnn_accel.sdc
+#
+# ACCEL_INST is the instance's hierarchical name, not a cell object, and an empty
+# string means the block is the top of the design. Only commands common to
+# OpenSTA, Synopsys tools and Vivado are used.
 #
 # Copyright (c) 2026 SoC IP Portfolio Contributors
 # SPDX-License-Identifier: Apache-2.0
@@ -15,6 +18,7 @@ if {![info exists ACCEL_INST]} {
     puts "cnn_accel.sdc: ACCEL_INST is not set; nothing to constrain"
     return
 }
+set _p [expr {$ACCEL_INST eq "" ? "" : "$ACCEL_INST/"}]
 
 #-----------------------------------------------------------------------------
 # The accelerator needs no timing exceptions.
@@ -31,10 +35,8 @@ if {![info exists ACCEL_INST]} {
 # irq is a one-cycle pulse in the accelerator's clock. Routed to the PS it
 # crosses into whatever domain the interrupt controller is in, and the correct
 # treatment is a cdc_pulse_sync in the integrating design, not a false path
-# here. If the integration does use a synchroniser, constrain it there:
-#
-#   set_max_delay -datapath_only [get_property PERIOD $ACCEL_CLK] \
-#       -from [get_pins ${ACCEL_INST}/irq_reg/C] -to [get_pins .../D]
+# here. The synchroniser's own fragment, cdc_pulse_sync.sdc, then constrains
+# the crossing.
 #
 # Nothing is applied here, because a false path on the interrupt is exactly the
 # kind of constraint that hides a real metastability problem.
@@ -59,10 +61,16 @@ if {![info exists ACCEL_INST]} {
 #    size - so it is several block RAMs in parallel and the adder in front of
 #    the write port sees all of them. If this is the failure, pipelining the
 #    add costs one cycle of latency and one more entry of output buffer.
+#
+# Items 2 and 3 are reported as path groups of their own.
 #-----------------------------------------------------------------------------
-if {[info exists ACCEL_REPORT] && $ACCEL_REPORT} {
-    report_timing -to   [get_pins -quiet ${ACCEL_INST}/s_axis_tready] -max_paths 4
-    report_timing -from [get_pins -quiet ${ACCEL_INST}/u_accumulator/*] -max_paths 4
+set _nets [get_nets -quiet ${_p}s_axis_tready]
+if {[llength $_nets] > 0} {
+    group_path -name cnn_accel_admission -through $_nets
+}
+set _nets [get_nets -quiet ${_p}acc_sum*]
+if {[llength $_nets] > 0} {
+    group_path -name cnn_accel_accumulate -through $_nets
 }
 
 #-----------------------------------------------------------------------------

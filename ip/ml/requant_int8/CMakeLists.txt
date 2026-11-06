@@ -19,4 +19,6 @@ add_ip(
   PARAMS          ACC_WIDTH=32 MULT_WIDTH=24 SHIFT_WIDTH=6 OUT_WIDTH=8
   CLOCK_PERIOD_NS 6.5
   CLOCK_PORT      clk
+  STA_SDC         scripts/requant_int8.sdc
+  SDC_INST_VAR    REQUANT_INST
 )

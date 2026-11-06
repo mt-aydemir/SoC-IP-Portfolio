@@ -30,4 +30,6 @@ add_ip(
   CLOCK_PERIOD_NS 4.0
   CLOCK_PORT      clk
   NO_STA
+  STA_SDC         scripts/cnn_accel.sdc
+  SDC_INST_VAR    ACCEL_INST
 )

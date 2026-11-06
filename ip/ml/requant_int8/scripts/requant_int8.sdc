@@ -3,8 +3,12 @@
 #
 # Usage from the integrating project:
 #
-#   set REQUANT_INST [get_cells u_accel/g_requant[0].u_requant]
+#   set REQUANT_INST u_requant
 #   source ip/ml/requant_int8/scripts/requant_int8.sdc
+#
+# REQUANT_INST is the instance's hierarchical name, not a cell object, and an empty
+# string means the block is the top of the design. Only commands common to
+# OpenSTA, Synopsys tools and Vivado are used.
 #
 # Copyright (c) 2026 SoC IP Portfolio Contributors
 # SPDX-License-Identifier: Apache-2.0
@@ -14,6 +18,7 @@ if {![info exists REQUANT_INST]} {
     puts "requant_int8.sdc: REQUANT_INST is not set; nothing to constrain"
     return
 }
+set _p [expr {$REQUANT_INST eq "" ? "" : "$REQUANT_INST/"}]
 
 #-----------------------------------------------------------------------------
 # The block needs no timing exceptions.
@@ -34,11 +39,13 @@ if {![info exists REQUANT_INST]} {
 # The second-longest path is stage 3: a variable shift by up to SHIFT_WIDTH
 # bits followed by two comparisons. A barrel shifter of that width is around
 # six levels of logic and is usually comfortable, but it is what will limit the
-# design if the multiply has been retimed away.
+# design if the multiply has been retimed away. Without carry chains it is the
+# longest path outright, which is why the generic-library run is timed at
+# 6.5 ns, so the paths leaving the product register are a group of their own.
 #-----------------------------------------------------------------------------
-if {[info exists REQUANT_REPORT] && $REQUANT_REPORT} {
-    report_timing -through [get_pins -quiet ${REQUANT_INST}/product_s2*] \
-                  -max_paths 4
+set _nets [get_nets -quiet ${_p}product_s2*]
+if {[llength $_nets] > 0} {
+    group_path -name requant_stage3 -through $_nets
 }
 
 #-----------------------------------------------------------------------------

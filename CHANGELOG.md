@@ -173,6 +173,13 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Four ml constraint fragments had never been run by a tool.** `cnn_accel`,
+  `requant_int8`, `systolic_array` and `systolic_pe` took a Vivado cell object
+  and reported with `report_timing`, which OpenSTA does not have, so they could
+  not join the timing stage; `systolic_array`'s DSP count also used a
+  Vivado-only filter. They now take a hierarchical name, turn the paths they
+  describe into `group_path` groups, and run through `STA_SDC` like the rest,
+  `cnn_accel` as a check-only test because it is `NO_STA`.
 - **A new machine could get a different Yosys.** `setup_env.sh` installed the
   latest `yowasp-yosys`, so a fresh setup pulled 0.70 instead of the 0.67 the
   flow is verified against. The version is now pinned.

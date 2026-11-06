@@ -3,9 +3,12 @@
 #
 # Usage from the integrating project:
 #
-#   set ARRAY_INST [get_cells u_accel/u_array]
-#   set ARRAY_CLK  [get_clocks aclk]
+#   set ARRAY_INST u_array
 #   source ip/ml/systolic_array/scripts/systolic_array.sdc
+#
+# ARRAY_INST is the instance's hierarchical name, not a cell object, and an empty
+# string means the block is the top of the design. Only commands common to
+# OpenSTA, Synopsys tools and Vivado are used.
 #
 # Copyright (c) 2026 SoC IP Portfolio Contributors
 # SPDX-License-Identifier: Apache-2.0
@@ -15,6 +18,7 @@ if {![info exists ARRAY_INST]} {
     puts "systolic_array.sdc: ARRAY_INST is not set; nothing to constrain"
     return
 }
+set _p [expr {$ARRAY_INST eq "" ? "" : "$ARRAY_INST/"}]
 
 #-----------------------------------------------------------------------------
 # The array needs no timing exceptions.
@@ -45,14 +49,16 @@ if {![info exists ARRAY_INST]} {
 #    ROWS*DATA_WIDTH in and COLS*ACC_WIDTH out - 128 and 512 bits at the
 #    default size. They are register to register, but they are long wires on a
 #    large device, and they are the paths most sensitive to floorplanning.
+#
+# The DSP count is a vendor report. Items 2 and 3 are path groups of their own.
 #-----------------------------------------------------------------------------
-if {[info exists ARRAY_REPORT] && $ARRAY_REPORT} {
-    puts "systolic_array: DSP blocks under ${ARRAY_INST}:"
-    puts "  [llength [get_cells -quiet -hierarchical -filter \
-        {PRIMITIVE_GROUP == ARITHMETIC} ${ARRAY_INST}/*]]"
-
-    report_timing -from [get_pins -quiet ${ARRAY_INST}/w_commit] -max_paths 4
-    report_timing -to   [get_pins -quiet ${ARRAY_INST}/res_vector*] -max_paths 4
+set _nets [get_nets -quiet ${_p}w_commit]
+if {[llength $_nets] > 0} {
+    group_path -name systolic_array_weight_commit -through $_nets
+}
+set _nets [get_nets -quiet ${_p}res_vector*]
+if {[llength $_nets] > 0} {
+    group_path -name systolic_array_result -through $_nets
 }
 
 #-----------------------------------------------------------------------------
