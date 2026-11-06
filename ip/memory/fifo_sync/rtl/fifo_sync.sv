@@ -130,10 +130,13 @@ module fifo_sync #(
   //
   // Issue a read whenever the RAM has a word and the output stage will have
   // room for it on arrival. The word already in flight is counted, because it
-  // will occupy one of the two output slots before this one does.
+  // will occupy one of the two output slots before this one does; the word
+  // leaving this cycle frees one, and without it the stage runs dry every third
+  // cycle of a drain.
   //---------------------------------------------------------------------------
   assign ram_read_issue = (ram_count_q != '0) &&
-                          ((out_count_q + 2'(inflight_q)) < 2'(OUTPUT_DEPTH));
+                          (((out_count_q + 2'(inflight_q)) < 2'(OUTPUT_DEPTH)) ||
+                           read_fire);
 
   // The output stage is pushed either by a word arriving from the RAM or by a
   // bypassed write. The two can never coincide: a bypass requires no read in

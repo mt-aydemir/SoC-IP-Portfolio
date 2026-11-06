@@ -179,6 +179,11 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **`fifo_sync` drained from its RAM at two thirds of the rate it claimed.** The
+  prefetch did not count the word leaving the output stage in the same cycle,
+  so the stage ran dry every third cycle: 16 words took 23 cycles. It does now,
+  which puts `m_ready` on the RAM read path. `test_full_rate_streaming` never
+  measured a rate; it does now, and `test_drain_rate` covers the drain.
 - **`fifo_sync` declared `p_no_underflow` but never asserted it.** As written
   it was also false: `m_valid` is legitimately low with a level while a RAM
   read is in flight. It now states that a word on offer is a word held, and is

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import cocotb
 from cocotb.triggers import RisingEdge
+from cocotb.utils import get_sim_time
 
 from socip import (
     ClockDomain,
@@ -216,10 +217,39 @@ async def test_full_rate_streaming(dut) -> None:
     rng = RandomStream("full_rate")
 
     values = [rng.uint(DATA_WIDTH) for _ in range(1000)]
+    start = get_sim_time("ns")
     await source.send_many(values)
 
     await expect_stream(sink, values, timeout_cycles=4000)
     assert_eq(sink.count, len(values), "words delivered at full rate")
+
+    cycles = (get_sim_time("ns") - start) / CLK_PERIOD_NS
+    assert cycles <= len(values) + DEPTH, f"{len(values)} words took {cycles} cycles"
+
+
+@cocotb.test()
+async def test_drain_rate(dut) -> None:
+    """Regression: a full FIFO drains from its RAM at one word per cycle.
+
+    The prefetch must count the word leaving this cycle, or the output stage
+    runs dry every third cycle.
+    """
+    domain, source, sink = await bring_up(dut)
+
+    dut.m_ready.value = 0
+    await domain.edge()
+    values = await fill(dut, source, DEPTH, start=0x300)
+    await domain.cycles(8)
+
+    await domain.edge()
+    dut.m_ready.value = 1
+    cycles = 0
+    while sink.count < len(values) and cycles < 4 * DEPTH:
+        await RisingEdge(dut.clk)
+        cycles += 1
+
+    await expect_stream(sink, values, timeout_cycles=8)
+    assert cycles <= DEPTH + 2, f"{DEPTH} words drained in {cycles} cycles"
 
 
 @cocotb.test()
