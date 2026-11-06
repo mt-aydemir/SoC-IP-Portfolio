@@ -179,6 +179,10 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **`fifo_sync` declared `p_no_underflow` but never asserted it.** As written
+  it was also false: `m_valid` is legitimately low with a level while a RAM
+  read is in flight. It now states that a word on offer is a word held, and is
+  asserted.
 - **Four ml constraint fragments had never been run by a tool.** `cnn_accel`,
   `requant_int8`, `systolic_array` and `systolic_pe` took a Vivado cell object
   and reported with `report_timing`, which OpenSTA does not have, so they could

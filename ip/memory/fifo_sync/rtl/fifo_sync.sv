@@ -263,9 +263,13 @@ module fifo_sync #(
   a_no_overflow : assert property (p_no_overflow)
     else $error("fifo_sync: write accepted while full");
 
+  // A word on offer is a word held. The reverse does not hold: while the RAM
+  // read is in flight the FIFO has a level and nothing on offer yet.
   property p_no_underflow;
-    @(posedge clk) disable iff (!rst_n) m_ready |-> (m_valid || (level == '0));
+    @(posedge clk) disable iff (!rst_n) m_valid |-> !empty;
   endproperty
+  a_no_underflow : assert property (p_no_underflow)
+    else $error("fifo_sync: word offered while empty");
 
   // The output stage must never be pushed when it is already full.
   property p_output_no_overflow;
