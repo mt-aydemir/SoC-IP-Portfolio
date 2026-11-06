@@ -36,6 +36,10 @@ the ordering is enforced by the test runner rather than by convention.
      - SymbiYosys + Z3
      - ``scripts/run_formal.py``
      - Every assertion proved by k-induction and every cover reached
+   * - 2d
+     - Verilator 5.052+ and UVM 2020-3.2
+     - ``scripts/run_uvm.py``
+     - No ``UVM_ERROR`` or ``UVM_FATAL``, every transaction checked
    * - 3
      - Yosys
      - ``scripts/run_synth.py``
@@ -136,6 +140,17 @@ Arguments
      - Prove with free-running clocks: every clock is a free input that may
        change on any solver step. For blocks with several clocks or with
        logic on both edges.
+   * - ``UVM_TOP``
+     - UVM testbench top module. Registers one ``uvmbuild.<category>.<name>.<cfg>``
+       per configuration and one ``uvm.<category>.<name>.<cfg>.<test>`` per test.
+       Builds hold a CTest resource lock: one compiles at a time.
+   * - ``UVM_SOURCES``
+     - The testbench's interface, package and top, in compile order.
+   * - ``UVM_TESTS``
+     - UVM test class names, each run in every configuration.
+   * - ``UVM_CONFIGS``
+     - Parameter sets of ``UVM_TOP``, each ``NAME=VALUE[,NAME=VALUE]``; one
+       build each. Without it, one build at the testbench's defaults.
    * - ``FORMAL_PARAMS``
      - ``NAME=VALUE`` parameters of the wrapper. ``PARAMS`` do not apply:
        proofs run at small configurations of their own.
@@ -195,6 +210,7 @@ configure summary states exactly what was found:
      Yosys          : Yosys 0.33
      OpenSTA        : /home/user/.local/bin/sta
      Formal         : /home/user/.venvs/soc-ip-portfolio/bin/yowasp-sby + z3
+     UVM            : Verilator 5.054 + UVM 2020-3.2 (/home/user/tools/uvm-2020.3.2)
      cocotb python  : /home/user/.venvs/soc-ip-portfolio/bin/python (cocotb 1.9.2)
      Sphinx         : /home/user/.venvs/soc-ip-portfolio/bin/sphinx-build
      Build root     : /mnt/c/Users/user/soc-ip-portfolio/build

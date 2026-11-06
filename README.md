@@ -14,6 +14,7 @@ IP that fails any stage does not ship.
 | **Lint** | Verilator `-Wall`, zero warnings tolerated |
 | **Simulation** | cocotb, plus a self-checking SystemVerilog testbench per IP |
 | **Formal** | SymbiYosys k-induction proofs for twenty blocks, CDC and clocking included |
+| **UVM** | UVM 1800.2-2020 environments for the APB and AXI4-Lite bridges, on Verilator |
 | **Synthesis** | Yosys, mapped to a generic reference standard cell library |
 | **Timing** | OpenSTA on the mapped netlist |
 | **Build** | CMake + Ninja, strictly out of source |
@@ -49,6 +50,7 @@ The flow runs inside WSL2 on Ubuntu 24.04 LTS.
 
 ```bash
 ./scripts/setup_env.sh                    # toolchain, venv, OpenSTA
+./scripts/setup_env.sh --uvm              # optional: Verilator for UVM
 export SOC_IP_VENV="$HOME/.venvs/soc-ip-portfolio"
 cmake -S . -B build -G Ninja
 ctest --test-dir build --output-on-failure
@@ -107,6 +109,7 @@ clean, and only timed once it synthesises clean.
 | Simulation | cocotb + Verilator | Every testcase passes, and at least one ran |
 | Smoke test | Verilator `--binary` | Exits zero and prints `TEST PASSED` |
 | Formal | SymbiYosys + Z3 | Every assertion proved by k-induction, every cover reached |
+| UVM | Verilator 5.052+, UVM 2020-3.2 | No UVM_ERROR or UVM_FATAL, every transaction checked |
 | Synthesis | Yosys | Maps to the generic cell library without errors |
 | Timing | OpenSTA | Worst setup and hold slack both non-negative |
 
@@ -122,6 +125,7 @@ ip/<category>/<ip_name>/
 ├── tb/            self-checking SystemVerilog testbench
 ├── cocotb/        Python test modules: directed, randomised, regression
 ├── formal/        property wrapper for SymbiYosys, where the block has one
+├── uvm/           UVM environment and testbench top, where the block has one
 ├── docs/          functional description, diagrams, parameter and port tables
 ├── scripts/       timing constraints and per-IP helpers
 ├── README.md      overview, interface summary, quick start

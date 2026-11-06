@@ -71,6 +71,9 @@ endfunction()
 #                   which proves every assertion with SymbiYosys (k-induction)
 #                   and requires every cover statement to be reached
 #   FORMAL_DEPTH    induction and cover depth                    (default: 20)
+#   UVM_TOP         UVM testbench top module; registers, per configuration,
+#                   uvmbuild.<cat>.<name>.<cfg> and one uvm.<cat>.<name>.<cfg>.<test>
+#                   per test
 #
 # Multi-value:
 #   SOURCES         RTL files, relative to the IP directory         (required)
@@ -86,13 +89,18 @@ endfunction()
 #   FORMAL_SOURCES  property wrapper files, relative to the IP directory
 #   FORMAL_PARAMS   NAME=VALUE parameters of FORMAL_TOP; PARAMS do not apply,
 #                   since proofs run at small configurations of their own
+#   UVM_SOURCES     the testbench's interface, package and top, in order
+#   UVM_TESTS       UVM test class names, each run in every configuration
+#   UVM_CONFIGS     parameter sets of UVM_TOP, each "NAME=VALUE[,NAME=VALUE]";
+#                   one build each                     (default: one, empty)
 #-----------------------------------------------------------------------------
 function(add_ip)
   set(_opts    NO_LINT NO_SIM NO_SYNTH NO_STA FORMAL_MULTICLOCK)
   set(_one     NAME TOP CATEGORY CLOCK_PERIOD_NS CLOCK_PORT TIMESCALE SVTB SVTB_TOP
-               STA_SDC SDC_INST_VAR FORMAL_TOP FORMAL_DEPTH)
+               STA_SDC SDC_INST_VAR FORMAL_TOP FORMAL_DEPTH UVM_TOP)
   set(_multi   SOURCES DEPENDS COCOTB_MODULES PARAMS LINT_ARGS SYNTH_ARGS
-               SDC_VARS SDC_CLOCKS FORMAL_SOURCES FORMAL_PARAMS)
+               SDC_VARS SDC_CLOCKS FORMAL_SOURCES FORMAL_PARAMS
+               UVM_SOURCES UVM_TESTS UVM_CONFIGS)
   cmake_parse_arguments(IP "${_opts}" "${_one}" "${_multi}" ${ARGN})
 
   if(NOT IP_NAME)
@@ -354,6 +362,84 @@ function(add_ip)
       set_tests_properties(formal.${IP_CATEGORY}.${IP_NAME} PROPERTIES
         FIXTURES_REQUIRED F_lint_${IP_NAME})
     endif()
+  endif()
+
+  #---------------------------------------------------------------------------
+  # Stage 2d: UVM testbench (Verilator 5.052+, UVM 2020-3.2)
+  #
+  # One build per configuration, then one run per test. A build compiles the
+  # whole UVM kit and peaks at about 1.6 GB, so builds hold a CTest resource
+  # lock and never run two at a time.
+  #---------------------------------------------------------------------------
+  if(SOC_IP_ENABLE_UVM AND SOC_IP_UVM_VERILATOR AND IP_UVM_TOP)
+    set(_uvm_srcs "")
+    foreach(_s IN LISTS IP_UVM_SOURCES)
+      set(_abs "${CMAKE_CURRENT_SOURCE_DIR}/${_s}")
+      if(NOT EXISTS "${_abs}")
+        message(FATAL_ERROR "add_ip(${IP_NAME}): missing UVM source ${_abs}")
+      endif()
+      list(APPEND _uvm_srcs "${_abs}")
+    endforeach()
+    set(_uvm_cfgs ${IP_UVM_CONFIGS})
+    if(NOT _uvm_cfgs)
+      set(_uvm_cfgs "default")
+    endif()
+    foreach(_cfg IN LISTS _uvm_cfgs)
+      set(_uvm_params "")
+      if(_cfg STREQUAL "default")
+        set(_tag "default")
+      else()
+        string(REPLACE "," ";" _pairs "${_cfg}")
+        foreach(_p IN LISTS _pairs)
+          list(APPEND _uvm_params --param "${_p}")
+        endforeach()
+        string(REGEX REPLACE "[^A-Za-z0-9]+" "_" _tag "${_cfg}")
+        string(TOLOWER "${_tag}" _tag)
+      endif()
+      set(_uvm_out "${_out}/uvm/${_tag}")
+      set(_uvm_build_cmd
+        "${SOC_IP_PYTHON}" "${SOC_IP_RUN_UVM}" build
+          --verilator "${SOC_IP_UVM_VERILATOR}"
+          --uvm-home  "${SOC_IP_UVM_HOME}"
+          --top       "${IP_UVM_TOP}"
+          --out-dir   "${_uvm_out}"
+          --report    "${SOC_IP_REPORT_OUT}/uvm/${IP_NAME}.${_tag}.build.log"
+          ${_uvm_params}
+          --sources   ${_all_srcs} ${_uvm_srcs})
+      add_custom_target(uvm_${IP_NAME}_${_tag}
+        COMMAND ${_uvm_build_cmd}
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+        COMMENT "[uvm  ] ${IP_CATEGORY}/${IP_NAME} (${_cfg})"
+        VERBATIM)
+      add_dependencies(uvm-all uvm_${IP_NAME}_${_tag})
+
+      add_test(NAME uvmbuild.${IP_CATEGORY}.${IP_NAME}.${_tag}
+               COMMAND ${_uvm_build_cmd}
+               WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
+      set_tests_properties(uvmbuild.${IP_CATEGORY}.${IP_NAME}.${_tag} PROPERTIES
+        LABELS "uvm;${IP_CATEGORY}"
+        TIMEOUT ${SOC_IP_UVM_TIMEOUT}
+        RESOURCE_LOCK soc_ip_uvm_build
+        FIXTURES_SETUP F_uvm_${IP_NAME}_${_tag})
+      if(SOC_IP_ENABLE_LINT AND SOC_IP_VERILATOR AND NOT IP_NO_LINT)
+        set_tests_properties(uvmbuild.${IP_CATEGORY}.${IP_NAME}.${_tag} PROPERTIES
+          FIXTURES_REQUIRED F_lint_${IP_NAME})
+      endif()
+
+      foreach(_test IN LISTS IP_UVM_TESTS)
+        add_test(NAME uvm.${IP_CATEGORY}.${IP_NAME}.${_tag}.${_test}
+                 COMMAND "${SOC_IP_PYTHON}" "${SOC_IP_RUN_UVM}" run
+                   --exe    "${_uvm_out}/obj_dir/tb"
+                   --test   "${_test}"
+                   --solver "${SOC_IP_SMT_SOLVER}"
+                   --report "${SOC_IP_REPORT_OUT}/uvm/${IP_NAME}.${_tag}.${_test}.log"
+                 WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
+        set_tests_properties(uvm.${IP_CATEGORY}.${IP_NAME}.${_tag}.${_test} PROPERTIES
+          LABELS "uvm;${IP_CATEGORY}"
+          TIMEOUT ${SOC_IP_UVM_TIMEOUT}
+          FIXTURES_REQUIRED F_uvm_${IP_NAME}_${_tag})
+      endforeach()
+    endforeach()
   endif()
 
   #---------------------------------------------------------------------------

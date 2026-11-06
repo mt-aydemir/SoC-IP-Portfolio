@@ -197,6 +197,11 @@ Verification
      - k-induction proof against an AXI4-Lite manager: pairing of
        AW, W and AR with their requests, one response each, SLVERR and read
        data, hold, and read/write alternation.
+   * - ``uvm/axi4_lite_slave_uvm_pkg.sv``
+     - UVM 2020 environment: an AXI4-Lite manager agent with independent
+       write and read workers, a reactive register block, a scoreboard in
+       register-request order with a reference memory, and a covergroup.
+       600 random transactions at full coverage and 400 at saturation.
 
 .. code-block:: bash
 

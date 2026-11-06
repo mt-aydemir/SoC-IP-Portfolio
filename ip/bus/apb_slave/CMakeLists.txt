@@ -17,4 +17,8 @@ add_ip(
   FORMAL_TOP      apb_slave_formal
   FORMAL_SOURCES  formal/apb_slave_formal.sv
   FORMAL_DEPTH    10
+  UVM_TOP         tb_apb_slave_uvm
+  UVM_SOURCES     uvm/apb_slave_if.sv uvm/apb_slave_uvm_pkg.sv uvm/tb_apb_slave_uvm.sv
+  UVM_TESTS       apb_random_test apb_back_to_back_test
+  UVM_CONFIGS     REGISTERED=1 REGISTERED=0
 )

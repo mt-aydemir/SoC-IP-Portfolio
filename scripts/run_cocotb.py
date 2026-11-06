@@ -134,7 +134,12 @@ def main() -> int:
         parameters[key.strip()] = coerce(value)
 
     if args.verilator:
-        os.environ.setdefault("VERILATOR_ROOT", "")
+        # cocotb's runner finds Verilator on PATH and needs no VERILATOR_ROOT.
+        # Left unset, every Verilator - packaged or built from source - finds
+        # its own files; an empty value sends a source-built one looking for
+        # /verilator_bin.
+        if not os.environ.get("VERILATOR_ROOT"):
+            os.environ.pop("VERILATOR_ROOT", None)
         os.environ["PATH"] = os.pathsep.join(
             [str(Path(args.verilator).parent), os.environ.get("PATH", "")])
 

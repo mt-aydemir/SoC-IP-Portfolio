@@ -44,6 +44,7 @@ option(SOC_IP_ENABLE_SIM    "Register cocotb simulation tests"       ON)
 option(SOC_IP_ENABLE_SYNTH  "Register Yosys synthesis tests"         ON)
 option(SOC_IP_ENABLE_STA    "Register OpenSTA timing tests"          ON)
 option(SOC_IP_ENABLE_FORMAL "Register SymbiYosys formal tests"       ON)
+option(SOC_IP_ENABLE_UVM    "Register UVM testbench tests"           ON)
 option(SOC_IP_ENABLE_DOCS   "Register Sphinx documentation target"   ON)
 option(SOC_IP_WAVES         "Generate waveforms during simulation"   ON)
 
@@ -53,6 +54,7 @@ set(SOC_IP_SIM_TIMEOUT 600 CACHE STRING "Per-simulation CTest timeout (s)")
 # ctest runs several in parallel. A native Yosys finishes them in seconds.
 set(SOC_IP_SYNTH_TIMEOUT 900 CACHE STRING "Per-synthesis CTest timeout (s)")
 set(SOC_IP_FORMAL_TIMEOUT 1200 CACHE STRING "Per-proof CTest timeout (s)")
+set(SOC_IP_UVM_TIMEOUT 1800 CACHE STRING "Per-UVM-build and per-UVM-test CTest timeout (s)")
 
 #-----------------------------------------------------------------------------
 # Canonical output layout. Nothing is ever written into the source tree.
@@ -80,6 +82,7 @@ add_custom_target(sim-all   COMMENT "Simulate every IP with cocotb")
 add_custom_target(synth-all COMMENT "Synthesise every IP with Yosys")
 add_custom_target(sta-all   COMMENT "Run OpenSTA on every applicable IP")
 add_custom_target(formal-all COMMENT "Prove every IP that has formal properties")
+add_custom_target(uvm-all    COMMENT "Build every UVM testbench")
 
 #-----------------------------------------------------------------------------
 # IP subdirectories.
@@ -123,6 +126,7 @@ message(STATUS "  Verilator      : ${SOC_IP_VERILATOR_STATUS}")
 message(STATUS "  Yosys          : ${SOC_IP_YOSYS_STATUS}")
 message(STATUS "  OpenSTA        : ${SOC_IP_STA_STATUS}")
 message(STATUS "  Formal         : ${SOC_IP_FORMAL_STATUS}")
+message(STATUS "  UVM            : ${SOC_IP_UVM_STATUS}")
 message(STATUS "  cocotb python  : ${SOC_IP_PYTHON_STATUS}")
 message(STATUS "  Sphinx         : ${SOC_IP_SPHINX_STATUS}")
 message(STATUS "  Build root     : ${CMAKE_BINARY_DIR}")

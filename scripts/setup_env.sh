@@ -11,6 +11,15 @@
 #     ./scripts/setup_env.sh --no-sta     # skip the OpenSTA source build
 #     ./scripts/setup_env.sh --no-root    # no sudo anywhere: CMake, Ninja and
 #                                         # Yosys from PyPI into the venv
+#     ./scripts/setup_env.sh --uvm        # also build Verilator for UVM
+#
+# --uvm adds the UVM stage's toolchain, which no distribution packages: a
+# Verilator new enough for UVM (5.052 or later) built from source into
+# ~/tools/verilator-<version> beside the flow's own, with Flex, Bison and
+# help2man built into ~/tools/local when the system lacks them, and the UVM
+# 2020-3.2 kit that Verilator ships in its test suite copied to
+# ~/tools/uvm-2020.3.2. No root is needed. The build compiles for a while
+# and wants about 2 GB of memory.
 #
 # --no-root exists for machines where sudo is not available. It installs
 # CMake, Ninja and Yosys from PyPI, and builds OpenSTA against Tcl, SWIG, Bison
@@ -38,6 +47,9 @@ DO_APT=1
 DO_VENV=1
 DO_STA=1
 DO_PIP_EDA=0
+DO_UVM=0
+UVM_VERILATOR_VERSION="${UVM_VERILATOR_VERSION:-5.054}"
+TOOLS="${SOC_IP_TOOLS:-$HOME/tools}"
 
 for arg in "$@"; do
   case "$arg" in
@@ -46,7 +58,8 @@ for arg in "$@"; do
     --no-sta)   DO_STA=0 ;;
     --no-venv)  DO_VENV=0 ;;
     --no-root)  DO_APT=0; DO_PIP_EDA=1 ;;
-    -h|--help)  sed -n '2,20p' "$0"; exit 0 ;;
+    --uvm)      DO_UVM=1 ;;
+    -h|--help)  sed -n '2,30p' "$0"; exit 0 ;;
     *) echo "unknown option: $arg" >&2; exit 2 ;;
   esac
 done
@@ -225,6 +238,60 @@ WRAP
 fi
 
 #-----------------------------------------------------------------------------
+# 3b. Verilator for UVM, and the UVM kit (--uvm)
+#-----------------------------------------------------------------------------
+if [ "$DO_UVM" = 1 ]; then
+  VUVM="$TOOLS/verilator-$UVM_VERILATOR_VERSION"
+  UVM_HOME="$TOOLS/uvm-2020.3.2"
+  SRC="$TOOLS/src"
+  LOCAL="$TOOLS/local"
+  mkdir -p "$SRC" "$LOCAL"
+  export PATH="$LOCAL/bin:$PATH"
+
+  # Verilator's build needs Flex (with FlexLexer.h), Bison and help2man.
+  gnu_tool() {   # name version url
+    if ! command -v "$1" >/dev/null 2>&1; then
+      say "Building $1 $2 into $LOCAL"
+      (cd "$SRC" && curl -fsSLO "$3" && tar xf "$(basename "$3")" \
+         && cd "$1-$2" && ./configure --prefix="$LOCAL" >/dev/null \
+         && make -j"$JOBS" >/dev/null && make install >/dev/null)
+    fi
+  }
+  gnu_tool bison 3.8.2 https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz
+  if ! command -v flex >/dev/null 2>&1 || [ ! -f /usr/include/FlexLexer.h ] \
+       && [ ! -f "$LOCAL/include/FlexLexer.h" ]; then
+    say "Building flex 2.6.4 into $LOCAL"
+    (cd "$SRC" && curl -fsSLO https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz \
+       && tar xf flex-2.6.4.tar.gz && cd flex-2.6.4 \
+       && ./configure --prefix="$LOCAL" >/dev/null && make -j"$JOBS" >/dev/null \
+       && make install >/dev/null)
+  fi
+  gnu_tool help2man 1.49.3 https://ftp.gnu.org/gnu/help2man/help2man-1.49.3.tar.xz
+
+  if [ -x "$VUVM/bin/verilator" ]; then
+    say "Verilator $UVM_VERILATOR_VERSION already installed: $VUVM"
+  else
+    say "Building Verilator $UVM_VERILATOR_VERSION into $VUVM"
+    (cd "$SRC" && curl -fsSL -o "verilator-$UVM_VERILATOR_VERSION.tar.gz" \
+       "https://github.com/verilator/verilator/archive/refs/tags/v$UVM_VERILATOR_VERSION.tar.gz" \
+       && tar xzf "verilator-$UVM_VERILATOR_VERSION.tar.gz" \
+       && cd "verilator-$UVM_VERILATOR_VERSION" && autoconf \
+       && CPPFLAGS="-I$LOCAL/include" LDFLAGS="-L$LOCAL/lib" ./configure --prefix="$VUVM" >/dev/null \
+       && make -j"$((JOBS < 4 ? JOBS : 4))" >/dev/null && make install >/dev/null)
+  fi
+
+  # The flattened UVM 2020-3.2 package and its DPI sources (Apache-2.0)
+  # ship in Verilator's test suite.
+  KIT="$SRC/verilator-$UVM_VERILATOR_VERSION/test_regress/t/uvm"
+  if [ ! -f "$UVM_HOME/uvm_pkg_all_v2020_3_2_dpi.svh" ]; then
+    say "Staging UVM 2020-3.2 into $UVM_HOME"
+    mkdir -p "$UVM_HOME"
+    cp "$KIT/uvm_pkg_all_v2020_3_2_dpi.svh" "$UVM_HOME/"
+    cp -r "$KIT/v2020_3_2/dpi" "$UVM_HOME/"
+  fi
+fi
+
+#-----------------------------------------------------------------------------
 # 4. Verification
 #-----------------------------------------------------------------------------
 say "Toolchain summary"
@@ -245,6 +312,9 @@ check verilator
 check yosys -V
 check gtkwave
 check sta -version
+for v in "$TOOLS"/verilator-*/bin/verilator; do
+  [ -x "$v" ] && printf '  %-14s %s\n' "verilator-uvm" "$("$v" --version | head -1)"
+done
 
 if [ -x "$VENV/bin/python" ]; then
   printf '  %-14s ' "python"

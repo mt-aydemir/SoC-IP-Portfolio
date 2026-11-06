@@ -188,6 +188,11 @@ Verification
      - k-induction proof of both response modes against an APB4
        requester: one register request per transfer, payload, response and
        wait-state timing.
+   * - ``uvm/apb_slave_uvm_pkg.sv``
+     - UVM 2020 environment, both response modes: an APB4 requester agent,
+       a reactive register block, a scoreboard with a reference memory and a
+       covergroup. 600 random transfers at full coverage, and 200 back to
+       back with the exact cycle count.
 
 .. code-block:: bash
 

@@ -11,6 +11,16 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **A UVM stage, and UVM environments for `apb_slave` and `axi4_lite_slave`.**
+  `add_ip(UVM_TOP ...)` builds a UVM 1800.2-2020 testbench once per parameter
+  configuration and runs each test in it, on Verilator 5.052 or later with
+  the UVM 2020-3.2 kit Verilator ships; `setup_env.sh --uvm` builds that
+  Verilator beside the flow's own, without root. Each environment has a bus
+  agent driven by constrained-random items, a reactive register block, a
+  scoreboard that pairs every bus transaction with exactly one register
+  request and predicts every read from a reference memory, and a
+  covergroup. Random tests reach full coverage; back-to-back tests check the
+  exact transfer timing. Six injected bugs all fail the UVM tests.
 - **Formal proofs for the CDC and clocking blocks.** `add_ip(FORMAL_MULTICLOCK)`
   proves a block with its clocks as free inputs, so every ratio and phase
   between clocks is explored and every input change lands on both sides of
@@ -163,6 +173,11 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **cocotb simulation failed with a Verilator built from source.**
+  `run_cocotb.py` set `VERILATOR_ROOT` to an empty value when it was unset; the
+  packaged Verilator tolerates that, but a source-built one then looks for
+  `/verilator_bin`. The driver now leaves the variable unset, and every
+  Verilator finds its own files.
 - **A fresh clone failed the documentation build.** `docs/source/_static` was
   an empty directory, which git does not record, so Sphinx's `-W` turned the
   missing `html_static_path` into an error in every checkout but the one it

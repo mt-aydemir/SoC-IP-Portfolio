@@ -102,6 +102,54 @@ elseif(SOC_IP_SBY)
 endif()
 
 #-----------------------------------------------------------------------------
+# Verilator for UVM, and the UVM kit
+#
+# UVM needs Verilator 5.052 or later, which Ubuntu does not package; the
+# flow's own Verilator may be older. setup_env.sh --uvm builds one into
+# ~/tools/verilator-<version> and copies the UVM 2020-3.2 kit that Verilator
+# ships in its test suite to ~/tools/uvm-2020.3.2. SOC_IP_UVM_VERILATOR and
+# SOC_IP_UVM_HOME override the search. Constrained randomisation needs the
+# SMT solver found for the formal stage.
+#-----------------------------------------------------------------------------
+set(SOC_IP_UVM_MIN_VERILATOR "5.052")
+set(_uvm_candidates "")
+if(DEFINED ENV{SOC_IP_UVM_VERILATOR})
+  list(APPEND _uvm_candidates "$ENV{SOC_IP_UVM_VERILATOR}")
+endif()
+file(GLOB _uvm_globbed "$ENV{HOME}/tools/verilator-*/bin/verilator")
+list(SORT _uvm_globbed COMPARE NATURAL ORDER DESCENDING)
+list(APPEND _uvm_candidates ${_uvm_globbed})
+if(SOC_IP_VERILATOR)
+  list(APPEND _uvm_candidates "${SOC_IP_VERILATOR}")
+endif()
+set(SOC_IP_UVM_VERILATOR "")
+foreach(_cand IN LISTS _uvm_candidates)
+  if(EXISTS "${_cand}")
+    execute_process(COMMAND "${_cand}" --version OUTPUT_VARIABLE _uvm_ver_out
+                    ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+    string(REGEX MATCH "[0-9]+\\.[0-9]+" _uvm_ver "${_uvm_ver_out}")
+    if(_uvm_ver AND NOT _uvm_ver VERSION_LESS SOC_IP_UVM_MIN_VERILATOR)
+      set(SOC_IP_UVM_VERILATOR "${_cand}")
+      set(SOC_IP_UVM_VERILATOR_VERSION "${_uvm_ver}")
+      break()
+    endif()
+  endif()
+endforeach()
+if(DEFINED ENV{SOC_IP_UVM_HOME})
+  set(SOC_IP_UVM_HOME "$ENV{SOC_IP_UVM_HOME}")
+else()
+  set(SOC_IP_UVM_HOME "$ENV{HOME}/tools/uvm-2020.3.2")
+endif()
+set(SOC_IP_UVM_STATUS "not found (needs Verilator >= ${SOC_IP_UVM_MIN_VERILATOR}; setup_env.sh --uvm)")
+if(SOC_IP_UVM_VERILATOR AND EXISTS "${SOC_IP_UVM_HOME}/uvm_pkg_all_v2020_3_2_dpi.svh"
+   AND SOC_IP_SMT_SOLVER)
+  set(SOC_IP_UVM_STATUS
+      "Verilator ${SOC_IP_UVM_VERILATOR_VERSION} + UVM 2020-3.2 (${SOC_IP_UVM_HOME})")
+else()
+  set(SOC_IP_UVM_VERILATOR "")
+endif()
+
+#-----------------------------------------------------------------------------
 # Sphinx - documentation
 #-----------------------------------------------------------------------------
 get_filename_component(_py_dir "${SOC_IP_PYTHON}" DIRECTORY)
@@ -122,3 +170,4 @@ set(SOC_IP_RUN_SVTB   "${SOC_IP_SCRIPT_DIR}/run_svtb.py"       CACHE INTERNAL ""
 set(SOC_IP_RUN_SYNTH  "${SOC_IP_SCRIPT_DIR}/run_synth.py"      CACHE INTERNAL "")
 set(SOC_IP_RUN_STA    "${SOC_IP_SCRIPT_DIR}/run_sta.py"        CACHE INTERNAL "")
 set(SOC_IP_RUN_FORMAL "${SOC_IP_SCRIPT_DIR}/run_formal.py"     CACHE INTERNAL "")
+set(SOC_IP_RUN_UVM    "${SOC_IP_SCRIPT_DIR}/run_uvm.py"        CACHE INTERNAL "")

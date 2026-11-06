@@ -17,4 +17,8 @@ add_ip(
   FORMAL_TOP      axi4_lite_slave_formal
   FORMAL_SOURCES  formal/axi4_lite_slave_formal.sv
   FORMAL_DEPTH    10
+  UVM_TOP         tb_axi4_lite_slave_uvm
+  UVM_SOURCES     uvm/axi4_lite_slave_if.sv uvm/axi4_lite_slave_uvm_pkg.sv
+                  uvm/tb_axi4_lite_slave_uvm.sv
+  UVM_TESTS       axil_random_test axil_saturation_test
 )

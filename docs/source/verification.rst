@@ -148,6 +148,70 @@ Writing a test module
        ...
        board.check_done()
 
+UVM testbenches
+===============
+
+The two register bridges, ``apb_slave`` and ``axi4_lite_slave``, also have a
+UVM 1800.2-2020 environment in ``uvm/``, run in the flow's stage 2d on
+Verilator, which supports UVM 2020-3.2 from release 5.052. Each is a
+conventional environment written in SystemVerilog:
+
+* a **bus agent** - sequencer, driver and monitor - acting as the APB4
+  requester or the AXI4-Lite manager, driven by constrained-random sequence
+  items (address windows, strobes, protection, gaps; for AXI4-Lite the
+  relative timing of AW and W and the response back-pressure, with a write
+  and a read in flight together);
+* a **reactive register-side component** standing in for the register
+  block: random ``reg_ready`` wait states, read data from its own memory and
+  an error for addresses at or above ``0x800``;
+* a **scoreboard** that pairs every bus transaction with exactly one
+  register request, checks the payload and the response, and predicts every
+  read from an independent reference memory - for AXI4-Lite in the order the
+  register block saw the requests, which is what decides what a read
+  returns;
+* a **covergroup** over kinds, errors, wait states, strobes and, for
+  AXI4-Lite, the AW/W order, back-pressure and read/write overlap.
+
+A test passes only when the scoreboard checked every transaction, the
+random test reached full coverage, and no ``UVM_ERROR`` or ``UVM_FATAL`` was
+reported; ``scripts/run_uvm.py`` reads the report counts, because a
+``UVM_FATAL`` ends a Verilator simulation with status zero.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - Test
+     - Contents
+   * - ``apb_random_test``
+     - 600 constrained-random transfers against a register block that
+       stalls 40% of the time, in both response modes.
+   * - ``apb_back_to_back_test``
+     - 200 transfers with no gaps and no wait states, and the exact cycle
+       count: two per transfer on the direct path, three registered.
+   * - ``axil_random_test``
+     - 600 mixed transactions with random channel timing, back-pressure and
+       wait states.
+   * - ``axil_saturation_test``
+     - 400 transactions with no gaps, no back-pressure and no wait states.
+
+A mutation campaign confirmed the environments bite: a request issued twice,
+read data returned on a write, a lost error response, a write accepted while
+its response was still owed and write data leaking onto a read request each
+fail them.
+
+Two simulator limits shape the code. There are no clocking blocks - drivers
+assign one time unit after the rising edge and monitors sample on the
+falling edge - because data through a virtual interface's clocking block
+does not yet propagate reliably (verilator/verilator#7688). And coverage is
+read for the whole covergroup only, since ``get_coverage()`` of a single
+coverpoint is not yet supported. Constrained randomisation calls an SMT
+solver at run time; the flow passes the Z3 it finds for the formal stage.
+
+.. code-block:: bash
+
+   ctest --test-dir build -L uvm
+
 Formal proofs
 =============
 
