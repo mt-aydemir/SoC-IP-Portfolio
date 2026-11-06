@@ -166,6 +166,7 @@ set(SOC_IP_SCRIPT_DIR "${CMAKE_SOURCE_DIR}/scripts"            CACHE INTERNAL ""
 set(SOC_IP_VERIF_DIR  "${CMAKE_SOURCE_DIR}/verification"       CACHE INTERNAL "")
 set(SOC_IP_RUN_COCOTB "${SOC_IP_SCRIPT_DIR}/run_cocotb.py"     CACHE INTERNAL "")
 set(SOC_IP_RUN_LINT   "${SOC_IP_SCRIPT_DIR}/run_lint.py"       CACHE INTERNAL "")
+set(SOC_IP_RUN_COVERAGE "${SOC_IP_SCRIPT_DIR}/run_coverage.py" CACHE INTERNAL "")
 set(SOC_IP_RUN_SVTB   "${SOC_IP_SCRIPT_DIR}/run_svtb.py"       CACHE INTERNAL "")
 set(SOC_IP_RUN_SYNTH  "${SOC_IP_SCRIPT_DIR}/run_synth.py"      CACHE INTERNAL "")
 set(SOC_IP_RUN_STA    "${SOC_IP_SCRIPT_DIR}/run_sta.py"        CACHE INTERNAL "")

@@ -50,6 +50,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--verilator", default=None)
     p.add_argument("--simulator", default="verilator")
     p.add_argument("--waves", action="store_true")
+    p.add_argument("--coverage", action="store_true",
+                   help="instrument the build; the run leaves coverage.dat")
     p.add_argument("--testcase", default=None, help="run a single testcase")
     p.add_argument("--seed", default=None, help="random seed for reproducible runs")
     p.add_argument("--param", action="append", default=[],
@@ -169,7 +171,7 @@ def main() -> int:
         hdl_toplevel=args.top,
         build_dir=str(build_dir),
         always=True,
-        build_args=list(BUILD_ARGS),
+        build_args=BUILD_ARGS + (["--coverage"] if args.coverage else []),
         parameters=parameters,
         timescale=split_timescale(args.timescale),
         waves=args.waves,

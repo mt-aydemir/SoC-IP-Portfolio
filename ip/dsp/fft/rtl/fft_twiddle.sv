@@ -24,6 +24,9 @@ module fft_twiddle (
     output logic signed [15:0] sin_out
 );
 
+  // One case item per table entry: this is data, not control flow, so it is
+  // left out of code coverage.
+  // verilator coverage_off
   function automatic logic signed [15:0] quarter(input logic [8:0] i);
     logic signed [15:0] q;
     case (i)
@@ -288,6 +291,7 @@ module fft_twiddle (
     endcase
     quarter = q;
   endfunction
+  // verilator coverage_on
 
   always_comb begin
     if (k <= 9'd256) begin

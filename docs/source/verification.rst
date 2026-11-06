@@ -344,12 +344,34 @@ and the ML accelerators other than ``mac_array``.
 
    ctest --test-dir build -L formal
 
-Coverage of the flow, not of lines
-==================================
+Code coverage
+=============
 
-The portfolio does not chase statement coverage. What is checked instead is
-that each block passes every flow stage under every parameter set that is
-claimed to be supported:
+Code coverage is measured, not gated. The instrumented builds are slower, so
+the stage is off by default:
+
+.. code-block:: bash
+
+   cmake -S . -B build-cov -G Ninja -DSOC_IP_ENABLE_COVERAGE=ON -DSOC_IP_WAVES=OFF
+   ctest --test-dir build-cov -L coverage -j8
+   cmake --build build-cov --target coverage-summary
+
+``coverage.<category>.<name>`` merges the block's cocotb and SystemVerilog
+testbench runs and counts the line, branch and toggle points of its own RTL.
+``reports/coverage/<name>.txt`` lists every point never hit. A point counts as
+covered when any instance of it was hit, in any parameter set. UVM runs are not
+included.
+
+Two kinds of line point are left out, because a miss on them says nothing about
+the tests: assertion declarations and failure actions, which only a failing
+assertion would reach, and lookup tables, whose functions sit between
+``verilator coverage_off`` and ``coverage_on`` pragmas.
+
+What else the flow checks
+=========================
+
+Beyond code coverage, each block has to pass every flow stage under every
+parameter set that is claimed to be supported:
 
 * lint clean under ``-Wall``, with no in-source waivers and every tool-level
   exception declared in the IP's ``CMakeLists.txt`` (see

@@ -78,6 +78,9 @@ module lfsr_rng #(
   // entry is a primitive polynomial; the cocotb suite recovers the
   // polynomial from the output and checks it.
   //---------------------------------------------------------------------------
+  // One case item per table entry: this is data, not control flow, so it is
+  // left out of code coverage.
+  // verilator coverage_off
   function automatic logic [63:0] lfsr_taps(input int unsigned w);
     begin
       unique case (w)
@@ -148,6 +151,7 @@ module lfsr_rng #(
       endcase
     end
   endfunction
+  // verilator coverage_on
 
   localparam logic [WIDTH-1:0] TAPS = WIDTH'(lfsr_taps(WIDTH));
 

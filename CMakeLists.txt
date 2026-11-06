@@ -45,6 +45,7 @@ option(SOC_IP_ENABLE_SYNTH  "Register Yosys synthesis tests"         ON)
 option(SOC_IP_ENABLE_STA    "Register OpenSTA timing tests"          ON)
 option(SOC_IP_ENABLE_FORMAL "Register SymbiYosys formal tests"       ON)
 option(SOC_IP_ENABLE_UVM    "Register UVM testbench tests"           ON)
+option(SOC_IP_ENABLE_COVERAGE "Instrument simulation, report code coverage" OFF)
 option(SOC_IP_ENABLE_DOCS   "Register Sphinx documentation target"   ON)
 option(SOC_IP_WAVES         "Generate waveforms during simulation"   ON)
 
@@ -82,6 +83,10 @@ add_custom_target(sim-all   COMMENT "Simulate every IP with cocotb")
 add_custom_target(synth-all COMMENT "Synthesise every IP with Yosys")
 add_custom_target(sta-all   COMMENT "Run OpenSTA on every applicable IP")
 add_custom_target(formal-all COMMENT "Prove every IP that has formal properties")
+add_custom_target(coverage-summary
+  COMMAND "${SOC_IP_PYTHON}" "${SOC_IP_RUN_COVERAGE}" summary
+          --report-dir "${SOC_IP_REPORT_OUT}/coverage"
+  COMMENT "Print the code coverage of every IP" VERBATIM)
 add_custom_target(uvm-all    COMMENT "Build every UVM testbench")
 
 #-----------------------------------------------------------------------------

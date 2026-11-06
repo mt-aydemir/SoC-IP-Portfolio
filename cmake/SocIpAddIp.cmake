@@ -212,6 +212,9 @@ function(add_ip)
     else()
       set(_waves "")
     endif()
+    if(SOC_IP_ENABLE_COVERAGE)
+      list(APPEND _waves --coverage)
+    endif()
     foreach(_mod IN LISTS IP_COCOTB_MODULES)
       set(_sim_cmd
         "${SOC_IP_PYTHON}" "${SOC_IP_RUN_COCOTB}"
@@ -274,6 +277,9 @@ function(add_ip)
     else()
       set(_svtb_waves "")
     endif()
+    if(SOC_IP_ENABLE_COVERAGE)
+      list(APPEND _svtb_waves --coverage)
+    endif()
 
     set(_svtb_cmd
       "${SOC_IP_PYTHON}" "${SOC_IP_RUN_SVTB}"
@@ -301,6 +307,28 @@ function(add_ip)
       TIMEOUT ${SOC_IP_SIM_TIMEOUT}
       FIXTURES_REQUIRED F_lint_${IP_NAME}
       FIXTURES_SETUP    F_sim_${IP_NAME})
+  endif()
+
+  #---------------------------------------------------------------------------
+  # Stage 2b+: code coverage of the runs above, off by default because the
+  # instrumented builds are slower. The sim and svtb tests are its fixtures,
+  # so `ctest -L coverage` runs them too.
+  #---------------------------------------------------------------------------
+  if(SOC_IP_ENABLE_COVERAGE AND SOC_IP_ENABLE_SIM AND SOC_IP_VERILATOR
+     AND NOT IP_NO_SIM AND (IP_SVTB OR (SOC_IP_HAVE_COCOTB AND IP_COCOTB_MODULES)))
+    add_test(NAME coverage.${IP_CATEGORY}.${IP_NAME}
+             COMMAND "${SOC_IP_PYTHON}" "${SOC_IP_RUN_COVERAGE}" report
+               --name       "${IP_NAME}"
+               --category   "${IP_CATEGORY}"
+               --data-dir   "${_out}/sim"
+               --data-dir   "${_out}/svtb"
+               --report-dir "${SOC_IP_REPORT_OUT}/coverage"
+               --sources    ${_own_srcs}
+             WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
+    set_tests_properties(coverage.${IP_CATEGORY}.${IP_NAME} PROPERTIES
+      LABELS "coverage;${IP_CATEGORY}"
+      TIMEOUT 300
+      FIXTURES_REQUIRED F_sim_${IP_NAME})
   endif()
 
   #---------------------------------------------------------------------------

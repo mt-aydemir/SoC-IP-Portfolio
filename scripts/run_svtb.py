@@ -18,6 +18,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+# `verilator --binary` writes no coverage, so a coverage build brings its own
+# main() and asks for what --binary implies.
+COVERAGE_MAIN = Path(os.path.abspath(__file__)).parent / "lib" / "svtb_coverage_main.cpp"
+
 PASS_BANNER = "TEST PASSED"
 FAIL_BANNER = "TEST FAILED"
 
@@ -31,6 +35,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--report", required=True)
     p.add_argument("--timescale", default="1ns/1ps")
     p.add_argument("--waves", action="store_true")
+    p.add_argument("--coverage", action="store_true",
+                   help="instrument the build; the run leaves coverage.dat")
     p.add_argument("--wave-dir", default=None)
     p.add_argument("--param", action="append", default=[])
     p.add_argument("--sources", nargs="+", required=True,
@@ -52,7 +58,8 @@ def main() -> int:
     exe = out_dir / args.name
     build_cmd = [
         args.verilator,
-        "--binary",
+        *(["--cc", "--exe", "--build", "--coverage", "--prefix", "Vsvtb"]
+          if args.coverage else ["--binary"]),
         "-sv",
         "--timing",
         "--assert",
@@ -68,6 +75,8 @@ def main() -> int:
         key, _, value = item.partition("=")
         build_cmd.append(f"-G{key.strip()}={value.strip()}")
     build_cmd += [str(Path(os.path.abspath(s))) for s in args.sources]
+    if args.coverage:
+        build_cmd.append(str(COVERAGE_MAIN))
 
     build = subprocess.run(build_cmd, capture_output=True, text=True,
                            cwd=str(out_dir))

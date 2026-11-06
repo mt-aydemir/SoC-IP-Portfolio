@@ -11,6 +11,12 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Code coverage.** `-DSOC_IP_ENABLE_COVERAGE=ON` builds the cocotb and
+  SystemVerilog testbench runs with `verilator --coverage`, and
+  `coverage.<category>.<name>` reports the line, branch and toggle points of
+  each block's own RTL, listing every point never hit; `coverage-summary`
+  prints the table. Off by default and not gated. Assertion points and lookup
+  tables are left out, the tables through `coverage_off` pragmas.
 - **A UVM stage, and UVM environments for `apb_slave` and `axi4_lite_slave`.**
   `add_ip(UVM_TOP ...)` builds a UVM 1800.2-2020 testbench once per parameter
   configuration and runs each test in it, on Verilator 5.052 or later with

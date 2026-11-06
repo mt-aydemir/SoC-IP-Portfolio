@@ -114,6 +114,9 @@ module cordic #(
   //---------------------------------------------------------------------------
   localparam int unsigned CANON_FRAC = 31;
 
+  // One case item per table entry: this is data, not control flow, so it is
+  // left out of code coverage.
+  // verilator coverage_off
   function automatic logic [31:0] atan_canon(input logic [4:0] index);
     unique case (index)
       5'd0:  atan_canon = 32'd536870912;
@@ -150,6 +153,7 @@ module cordic #(
       default: atan_canon = 32'd0;
     endcase
   endfunction
+  // verilator coverage_on
 
   // The angle format has WIDTH-1 fractional bits relative to pi.
   localparam int unsigned ANGLE_SHIFT = CANON_FRAC - (WIDTH - 1);
