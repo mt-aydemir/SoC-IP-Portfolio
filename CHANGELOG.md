@@ -173,6 +173,9 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **A new machine could get a different Yosys.** `setup_env.sh` installed the
+  latest `yowasp-yosys`, so a fresh setup pulled 0.70 instead of the 0.67 the
+  flow is verified against. The version is now pinned.
 - **cocotb simulation failed with a Verilator built from source.**
   `run_cocotb.py` set `VERILATOR_ROOT` to an empty value when it was unset; the
   packaged Verilator tolerates that, but a source-built one then looks for

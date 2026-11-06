@@ -137,7 +137,10 @@ fi
 #-----------------------------------------------------------------------------
 if [ "$DO_PIP_EDA" = 1 ]; then
   say "Installing CMake, Ninja and Yosys from PyPI (no sudo required)"
-  "$VENV/bin/python" -m pip install --quiet cmake ninja yowasp-yosys
+  # Yosys is pinned: the flow is verified against this release, and a newer one
+  # can change synthesis results between machines.
+  "$VENV/bin/python" -m pip install --quiet cmake ninja \
+    yowasp-yosys==0.67.0.0.post1190
 
   mkdir -p "$HOME/.local/bin"
   for tool in cmake ctest cpack ninja; do
