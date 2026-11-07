@@ -177,8 +177,10 @@ if [ "$DO_STA" = 1 ]; then
     # Build tools. With apt they were installed above; without it, unpack the
     # same packages into a private sysroot. apt-get download needs no root.
     STA_CMAKE_ARGS=()
+    STA_PRIVATE_TCL=0
     if ! command -v swig >/dev/null 2>&1 || [ ! -e /usr/include/tcl8.6/tcl.h ]; then
       say "Unpacking Tcl, SWIG, Bison and Flex into $STA_SYSROOT (no root)"
+      STA_PRIVATE_TCL=1
       mkdir -p "$STA_SYSROOT/debs"
       ( cd "$STA_SYSROOT/debs" &&
         apt-get download tcl8.6-dev libtcl8.6 tcl8.6 swig bison flex \
@@ -197,6 +199,16 @@ if [ "$DO_STA" = 1 ]; then
         -DBISON_EXECUTABLE="$STA_SYSROOT/usr/bin/bison"
         -DFLEX_EXECUTABLE="$STA_SYSROOT/usr/bin/flex"
         -DFLEX_INCLUDE_DIR="$STA_SYSROOT/usr/include")
+    fi
+
+    # Eigen, header-only, which OpenSTA's CMake requires. A machine can have
+    # Tcl and SWIG and still lack it, so it is checked on its own.
+    if [ ! -f /usr/share/eigen3/cmake/Eigen3Config.cmake ]; then
+      say "Unpacking Eigen into $STA_SYSROOT (no root)"
+      mkdir -p "$STA_SYSROOT/debs"
+      ( cd "$STA_SYSROOT/debs" && apt-get download libeigen3-dev )
+      dpkg-deb -x "$STA_SYSROOT"/debs/libeigen3-dev_*.deb "$STA_SYSROOT"
+      STA_CMAKE_ARGS+=(-DEigen3_DIR="$STA_SYSROOT/usr/share/eigen3/cmake")
     fi
 
     # CUDD, which OpenSTA links against. Not packaged for Ubuntu.
@@ -221,7 +233,7 @@ if [ "$DO_STA" = 1 ]; then
       "${STA_CMAKE_ARGS[@]}"
     cmake --build "$OPENSTA_SRC/build" -j "$JOBS"
 
-    if [ "${#STA_CMAKE_ARGS[@]}" -gt 0 ]; then
+    if [ "$STA_PRIVATE_TCL" = 1 ]; then
       # Built against the private Tcl: install behind a wrapper that finds it.
       cp "$OPENSTA_SRC/build/sta" "$HOME/.local/libexec/sta"
       cat > "$HOME/.local/bin/sta" <<WRAP
