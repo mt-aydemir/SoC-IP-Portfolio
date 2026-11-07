@@ -179,6 +179,12 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **CI ran a different toolchain from the verified one.** It installed Yosys
+  from apt instead of the pinned 0.67, had no SymbiYosys or Z3 and no Verilator
+  for UVM, so the formal and UVM stages were silently not registered, and its
+  OpenSTA cache key named 2.6.0. It now provisions with
+  `setup_env.sh --no-root --uvm`, caches the source builds against that script,
+  and fails when configure reports a stage without its tool.
 - **`fifo_sync` drained from its RAM at two thirds of the rate it claimed.** The
   prefetch did not count the word leaving the output stage in the same cycle,
   so the stage ran dry every third cycle: 16 words took 23 cycles. It does now,

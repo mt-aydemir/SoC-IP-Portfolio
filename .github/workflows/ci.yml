@@ -2,7 +2,8 @@
 # Continuous integration for the SoC IP portfolio.
 #
 # Mirrors exactly what a developer runs locally: configure with CMake, then
-# let CTest drive the ordered lint -> simulation -> synthesis -> timing flow.
+# let CTest drive the ordered lint -> simulation -> formal -> UVM ->
+# synthesis -> timing flow.
 # There is no CI-only build path, so a green pipeline means the same thing as
 # a green local run.
 #=============================================================================
@@ -44,11 +45,16 @@ jobs:
   #---------------------------------------------------------------------------
   # The full flow.
   #---------------------------------------------------------------------------
+  # The toolchain is the one the flow is verified against, provisioned by the
+  # same script a developer runs: Verilator 5.020 from Ubuntu 24.04, and
+  # setup_env.sh --no-root --uvm for the rest - Yosys pinned to 0.67 with
+  # SymbiYosys and Z3 in the venv, OpenSTA 3.1.0 from source, and Verilator
+  # 5.054 with UVM 2020-3.2. The source builds are cached against the script.
   regression:
-    name: Lint, simulate, synthesise, time
+    name: Lint, simulate, prove, synthesise, time
     runs-on: ubuntu-24.04
     needs: conventions
-    timeout-minutes: 90
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
 
@@ -56,38 +62,33 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install EDA toolchain
+      - name: System packages
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            build-essential cmake ninja-build \
-            verilator yosys \
-            tcl-dev swig bison flex libeigen3-dev zlib1g-dev \
-            graphviz
+            build-essential verilator bison flex libfl-dev help2man graphviz
 
-      - name: Cache OpenSTA
-        id: cache-sta
+      - name: Cache source-built tools
         uses: actions/cache@v4
         with:
-          path: ~/.local
-          key: opensta-v2.6.0-ubuntu24.04
+          path: |
+            ~/.local
+            ~/tools
+          key: eda-${{ runner.os }}-ubuntu24.04-${{ hashFiles('scripts/setup_env.sh') }}
 
-      - name: Build OpenSTA
-        if: steps.cache-sta.outputs.cache-hit != 'true'
-        run: ./scripts/setup_env.sh --no-sudo --no-venv
-
-      - name: Python environment
+      - name: Toolchain
         run: |
-          python -m venv "$SOC_IP_VENV"
-          "$SOC_IP_VENV/bin/python" -m pip install --upgrade --quiet pip
-          "$SOC_IP_VENV/bin/python" -m pip install --quiet \
-            "cocotb>=1.9,<2.0" cocotb-bus pytest sphinx sphinx-rtd-theme \
-            myst-parser numpy pyyaml
+          ./scripts/setup_env.sh --no-root --uvm
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Configure
         run: |
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          cmake -S . -B build -G Ninja -DSOC_IP_WAVES=OFF
+          cmake -S . -B build -G Ninja -DSOC_IP_WAVES=OFF | tee configure.log
+          # A missing tool only drops its stage, so a green run would hide it.
+          if grep -E '^--   (Verilator|Yosys|OpenSTA|Formal|UVM|cocotb python) +:.*(not found|MISSING|no SMT solver)' \
+               configure.log; then
+            echo "::error::a flow stage has no tool"; exit 1
+          fi
 
       - name: Regression
         run: ctest --test-dir build --output-on-failure -j "$(nproc)"
