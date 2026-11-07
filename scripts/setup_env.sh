@@ -158,7 +158,9 @@ if [ "$DO_PIP_EDA" = 1 ]; then
 
   case ":$PATH:" in
     *":$HOME/.local/bin:"*) ;;
-    *) warn "add \$HOME/.local/bin to your PATH to pick up cmake, ninja and yosys" ;;
+    *) warn "add \$HOME/.local/bin to your PATH to pick up cmake, ninja and yosys"
+       # The OpenSTA build below needs this CMake and Ninja.
+       export PATH="$HOME/.local/bin:$PATH" ;;
   esac
 
 fi

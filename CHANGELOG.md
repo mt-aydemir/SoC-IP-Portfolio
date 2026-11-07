@@ -179,6 +179,11 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **`setup_env.sh --no-root` failed on a machine without `~/.local/bin` on
+  PATH.** It installed CMake and Ninja there, then could not find them to build
+  OpenSTA. It now puts the directory on its own PATH. The script was also
+  committed without its executable bit, so `./scripts/setup_env.sh` failed on
+  every fresh Linux clone.
 - **CI ran a different toolchain from the verified one.** It installed Yosys
   from apt instead of the pinned 0.67, had no SymbiYosys or Z3 and no Verilator
   for UVM, so the formal and UVM stages were silently not registered, and its
