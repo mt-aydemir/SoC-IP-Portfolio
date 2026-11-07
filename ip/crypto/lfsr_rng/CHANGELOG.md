@@ -12,6 +12,11 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Changed
+
+- The feedback-tap table is left out of code coverage with `verilator coverage_off`: it is
+  data, not control flow. A comment-only change.
+
 ## [1.0.0] - 2026-11-01
 
 ### Added

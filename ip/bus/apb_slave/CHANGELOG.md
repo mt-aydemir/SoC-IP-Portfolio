@@ -12,6 +12,12 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Added
+
+- A UVM environment in `uvm/`: an APB agent, a register responder and
+  monitor, and a scoreboard with functional coverage. `apb_random_test` and
+  `apb_back_to_back_test` run with `REGISTERED` both 1 and 0.
+
 ## [1.0.0] - 2026-11-01
 
 ### Added

@@ -10,6 +10,13 @@ and this IP is versioned independently under
 
 ### Fixed
 
+- Draining from the RAM ran at two thirds of the claimed rate: the prefetch
+  did not count the word leaving the output stage in the same cycle, so 16
+  words took 23 cycles. It does now. `test_full_rate_streaming` measures its
+  rate, and the new `test_drain_rate` covers the drain.
+- `p_no_underflow` was declared but never asserted, and as written it was
+  false while a RAM read is in flight. It now states that a word on offer is
+  a word held, and is asserted.
 - `scripts/fifo_sync.sdc` now uses only commands common to OpenSTA, Synopsys
   tools and Vivado, and takes the instance as a hierarchical name.
 - The max-delays on the `s_ready` and `m_valid` pins constrained the

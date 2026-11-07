@@ -8,6 +8,13 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/systolic_array.sdc` takes the instance as a hierarchical name, uses only
+  commands common to OpenSTA, Synopsys tools and Vivado, and reports its paths
+  as `group_path` groups instead of with `report_timing`. It is now run by the
+  timing stage. The Vivado-only DSP count is gone.
+
 ## [1.0.0] - 2026-08-02
 
 ### Added

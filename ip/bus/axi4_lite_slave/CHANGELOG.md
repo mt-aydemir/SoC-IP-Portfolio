@@ -12,6 +12,13 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Added
+
+- A UVM environment in `uvm/`: an AXI4-Lite agent whose driver pipelines
+  AW/W while a B response is owed, a register responder and monitor, and a
+  scoreboard with functional coverage. Tests: `axil_random_test` and
+  `axil_saturation_test`.
+
 ## [1.0.0] - 2026-11-01
 
 ### Added

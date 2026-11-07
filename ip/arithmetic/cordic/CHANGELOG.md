@@ -12,6 +12,11 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Changed
+
+- The arctangent table is left out of code coverage with `verilator coverage_off`: it is
+  data, not control flow. A comment-only change.
+
 ### Fixed
 
 - `scripts/cordic.sdc` used Synopsys-only collection commands that OpenSTA
