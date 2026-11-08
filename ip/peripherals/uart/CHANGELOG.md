@@ -12,6 +12,13 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Added
+
+- The SystemVerilog testbench loops back a second instance in the default
+  configuration, 8 data bits without parity and one stop bit, which no test
+  ran before, and checks a loopback at the largest bit period the divider
+  holds.
+
 ## [1.0.0] - 2026-11-01
 
 Replaces the earlier `peripherals/uart.sv`, which had no `rxd` synchroniser,

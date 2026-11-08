@@ -187,6 +187,17 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Code coverage dropped the cocotb runs on a checkout reached through a
+  symlink.** cocotb records sources with the link resolved and the SystemVerilog
+  testbench does not, so `run_coverage.py` matched only one of them. It compares
+  real paths now.
+- **Three untested RAM features and an untested UART configuration, found by
+  code coverage.** No test loaded `INIT_FILE` into `ram_sp`, `ram_sdp` or
+  `ram_dp`, and each RAM was tested at one byte-enable setting; each testbench
+  now has a second instance at the other setting, preloaded from a file. The
+  UART's default configuration, without parity and with one stop bit, was never
+  run; its testbench now loops it back, and checks the largest bit period the
+  divider holds. `run_svtb.py` defines `SOC_IP_TB_DIR` for testbench data files.
 - **`setup_env.sh --no-root` failed on a machine without `~/.local/bin` on
   PATH.** It installed CMake and Ninja there, then could not find them to build
   OpenSTA. It now puts the directory on its own PATH, and unpacks Eigen, which

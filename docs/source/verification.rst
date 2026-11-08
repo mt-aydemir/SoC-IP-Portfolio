@@ -367,6 +367,25 @@ the tests: assertion declarations and failure actions, which only a failing
 assertion would reach, and lookup tables, whose functions sit between
 ``verilator coverage_off`` and ``coverage_on`` pragmas.
 
+The points still missed are, by kind:
+
+* ``default`` arms of case statements over fully decoded state, which no legal
+  state reaches;
+* the ``else`` of the push-and-pop case in the two-entry output stages of
+  ``fifo_sync``, ``fifo_async`` and ``bram_ctrl``: it needs the stage full while
+  a word arrives, which their formal invariants rule out;
+* elaboration-time parameter checks, which run before simulation starts;
+* three error corners of ``cnn_accel``'s command parser: a malformed header
+  that ends its frame, a short data frame, and the status reply held back by
+  the output stream;
+* toggles of configuration inputs and counters whose high bits only a slower
+  bit rate than any test uses would set, in ``uart`` above bit 11 and in
+  ``i2c_master``.
+
+A testbench that needs a data file names it relative to ``SOC_IP_TB_DIR``,
+which ``run_svtb.py`` defines as the testbench's directory; the RAMs' preload
+files are read that way.
+
 What else the flow checks
 =========================
 

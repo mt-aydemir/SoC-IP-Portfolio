@@ -74,6 +74,9 @@ def main() -> int:
     for item in args.param:
         key, _, value = item.partition("=")
         build_cmd.append(f"-G{key.strip()}={value.strip()}")
+    # The testbench's own directory, for data files it loads: SOC_IP_TB_DIR.
+    tb_dir = Path(os.path.abspath(args.sources[-1])).parent
+    build_cmd.append(f'-DSOC_IP_TB_DIR="{tb_dir.as_posix()}"')
     build_cmd += [str(Path(os.path.abspath(s))) for s in args.sources]
     if args.coverage:
         build_cmd.append(str(COVERAGE_MAIN))

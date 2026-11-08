@@ -8,6 +8,12 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Added
+
+- The SystemVerilog testbench has a second instance without byte enables,
+  preloaded through `INIT_FILE` from `tb/ram_init.hex`. Neither the preload
+  nor that byte-enable setting was tested before; code coverage showed it.
+
 ### Fixed
 
 - `scripts/ram_sp.sdc` now uses only commands common to OpenSTA, Synopsys

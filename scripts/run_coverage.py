@@ -82,7 +82,7 @@ def read_points(data: Path, sources: dict[str, set[int]],
             key, _, count = line[3:].rpartition("' ")
             fields = parse_key(key)
             kind = KINDS.get(fields.get("page", "").partition("/")[0])
-            path = os.path.abspath(fields.get("f", ""))
+            path = os.path.realpath(fields.get("f", ""))
             if kind is None or path not in sources:
                 continue
             number = int(fields.get("l", 0))
@@ -97,7 +97,10 @@ def percent(hit: int, total: int) -> float | None:
 
 
 def report(args: argparse.Namespace) -> int:
-    sources = {os.path.abspath(s): assertion_lines(s) for s in args.sources}
+    # Real paths on both sides: cocotb records sources with symlinks resolved
+    # and the SystemVerilog testbench does not, so a checkout reached through
+    # a symlink would otherwise lose one testbench's points.
+    sources = {os.path.realpath(s): assertion_lines(s) for s in args.sources}
     files = sorted(f for d in args.data_dir
                    for f in Path(os.path.abspath(d)).rglob("coverage.dat"))
     if not files:

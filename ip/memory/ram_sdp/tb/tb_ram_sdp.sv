@@ -36,6 +36,36 @@ module tb_ram_sdp;
   int unsigned           error_count;
   logic [DATA_WIDTH-1:0] model [DEPTH];
 
+  // A second instance, with byte enables and preloaded through INIT_FILE.
+  // run_svtb.py defines SOC_IP_TB_DIR as this file's directory, which is
+  // where ram_init.hex lives.
+  localparam int unsigned         INIT_WORDS = 8;
+  localparam logic [DATA_WIDTH-1:0] INIT_DATA [INIT_WORDS] = '{
+      32'h0011_2233, 32'h4455_6677, 32'h8899_AABB, 32'hCCDD_EEFF,
+      32'h0F1E_2D3C, 32'h4B5A_6978, 32'h8796_A5B4, 32'hC3D2_E1F0};
+  logic                  alt_wr_en, alt_rd_en;
+  logic [3:0]            alt_wr_be;
+  logic [ADDR_WIDTH-1:0] alt_wr_addr, alt_rd_addr;
+  logic [DATA_WIDTH-1:0] alt_wr_data, alt_rd_data;
+
+  ram_sdp #(
+      .DATA_WIDTH  (DATA_WIDTH),
+      .DEPTH       (DEPTH),
+      .BYTE_ENABLE (1),
+      .OUTPUT_REG  (0),
+      .INIT_FILE   ({`SOC_IP_TB_DIR, "/ram_init.hex"})
+  ) dut_alt (
+      .wr_clk  (wr_clk),
+      .wr_en   (alt_wr_en),
+      .wr_be   (alt_wr_be),
+      .wr_addr (alt_wr_addr),
+      .wr_data (alt_wr_data),
+      .rd_clk  (rd_clk),
+      .rd_en   (alt_rd_en),
+      .rd_addr (alt_rd_addr),
+      .rd_data (alt_rd_data)
+  );
+
   ram_sdp #(
       .DATA_WIDTH  (DATA_WIDTH),
       .DEPTH       (DEPTH),
@@ -92,8 +122,53 @@ module tb_ram_sdp;
     end
   endtask
 
+  task automatic alt_write(input logic [ADDR_WIDTH-1:0] a,
+                           input logic [DATA_WIDTH-1:0] d,
+                           input logic [3:0]            mask);
+    @(negedge wr_clk);
+    alt_wr_en   = 1'b1;
+    alt_wr_be   = mask;
+    alt_wr_addr = a;
+    alt_wr_data = d;
+    @(posedge wr_clk);
+    @(negedge wr_clk);
+    alt_wr_en = 1'b0;
+  endtask
+
+  task automatic alt_read_check(input logic [ADDR_WIDTH-1:0] a,
+                                input logic [DATA_WIDTH-1:0] expect_rdata,
+                                input string                 context_name);
+    @(negedge rd_clk);
+    alt_rd_en   = 1'b1;
+    alt_rd_addr = a;
+    @(posedge rd_clk);
+    @(negedge rd_clk);
+    alt_rd_en = 1'b0;
+    #1;
+    if (alt_rd_data !== expect_rdata) begin
+      error_count++;
+      $error("%s: address %0d expected 0x%0h, got 0x%0h", context_name, a,
+             expect_rdata, alt_rd_data);
+    end
+  endtask
+
+  task automatic alt_checks();
+    for (int unsigned i = 0; i < INIT_WORDS; i++) begin
+      alt_read_check(ADDR_WIDTH'(i), INIT_DATA[i], "INIT_FILE contents");
+    end
+    // Byte enables: each lane written alone leaves the others as loaded.
+    alt_write(ADDR_WIDTH'(2), 32'hFFFF_FFFF, 4'b0100);
+    alt_read_check(ADDR_WIDTH'(2), 32'h88FF_AABB, "one byte lane");
+    alt_write(ADDR_WIDTH'(2), 32'h0000_0000, 4'b1001);
+    alt_read_check(ADDR_WIDTH'(2), 32'h00FF_AA00, "two byte lanes");
+    alt_write(ADDR_WIDTH'(2), 32'h1234_5678, 4'b0000);
+    alt_read_check(ADDR_WIDTH'(2), 32'h00FF_AA00, "no lane enabled");
+  endtask
+
   initial begin
     error_count = 0;
+    alt_wr_en   = 1'b0;
+    alt_rd_en   = 1'b0;
     wr_en       = 1'b0;
     wr_be       = '1;
     wr_addr     = '0;
@@ -162,6 +237,9 @@ module tb_ram_sdp;
         mem_read_check(a, $sformatf("random %0d", i));
       end
     end
+
+    // --- the second instance: byte enables, INIT_FILE ---------------------------
+    alt_checks();
 
     // --- verdict ----------------------------------------------------------------
     repeat (2) @(posedge rd_clk);

@@ -76,6 +76,46 @@ module tb_uart;
     forever #(CLK_PERIOD / 2) clk = ~clk;
   end
 
+  //---------------------------------------------------------------------------
+  // A second instance in the block's default configuration - 8 data bits, no
+  // parity, one stop bit - looped back on itself. The main instance covers
+  // parity and two stop bits; this one covers the frame without them.
+  //---------------------------------------------------------------------------
+  logic       np_s_valid, np_s_ready, np_txd, np_m_valid;
+  logic [7:0] np_s_data, np_m_data;
+  logic       np_perr, np_ferr, np_overrun;
+  logic [7:0] np_rx_log [$];
+  logic       np_rx_bad;
+
+  uart #(
+      .DATA_BITS (8),
+      .PARITY    (0),
+      .STOP_BITS (1),
+      .DIV_WIDTH (DIV_WIDTH)
+  ) dut_np (
+      .clk          (clk),
+      .rst_n        (rst_n),
+      .clks_per_bit (clks_per_bit),
+      .s_valid      (np_s_valid),
+      .s_ready      (np_s_ready),
+      .s_data       (np_s_data),
+      .txd          (np_txd),
+      .m_valid      (np_m_valid),
+      .m_ready      (1'b1),
+      .m_data       (np_m_data),
+      .m_parity_err (np_perr),
+      .m_frame_err  (np_ferr),
+      .rx_overrun   (np_overrun),
+      .rxd          (np_txd)
+  );
+
+  always @(posedge clk) begin
+    if (rst_n && np_m_valid) begin
+      np_rx_log.push_back(np_m_data);
+      if (np_perr || np_ferr) np_rx_bad = 1'b1;
+    end
+  end
+
   function automatic logic odd_parity(input logic [DATA_BITS-1:0] d);
     return ~(^d);
   endfunction
@@ -162,6 +202,8 @@ module tb_uart;
     check_count  = 0;
     clks_per_bit = DIV_WIDTH'(10);
     s_valid      = 1'b0;
+    np_s_valid   = 1'b0;
+    np_s_data    = '0;
     s_data       = '0;
     m_ready      = 1'b1;
     loopback     = 1'b0;
@@ -223,6 +265,46 @@ module tb_uart;
         check(rx_log[i] == sent[i],
               $sformatf("loopback cpb=%0d word %0d: sent %h got %h",
                         clks_per_bit, i, sent[i], rx_log[i]));
+      end
+    end
+
+    // --- the largest bit period the divider holds -----------------------------
+    begin
+      int unsigned target;
+      clks_per_bit = '1;
+      repeat (2 * FRAME_BITS * 16) @(posedge clk);
+      rx_log.delete();
+      target = rx_count + 2;
+      send(7'h5A);
+      send(7'h25);
+      wait_rx(target, got);
+      check(got && rx_log.size() == 2 && rx_log[0] == 7'h5A && rx_log[1] == 7'h25,
+            $sformatf("loopback at the maximum clks_per_bit=%0d", clks_per_bit));
+      clks_per_bit = DIV_WIDTH'(10);
+    end
+
+    // --- no parity, one stop bit: the default configuration ----------------
+    begin
+      logic [7:0] np_sent [$];
+      np_rx_log.delete();
+      np_rx_bad = 1'b0;
+      for (int i = 0; i < 32; i++) begin
+        np_sent.push_back(8'($urandom()));
+        @(negedge clk);
+        np_s_data  = np_sent[i];
+        np_s_valid = 1'b1;
+        while (!np_s_ready) @(negedge clk);
+        @(posedge clk);
+        #1 np_s_valid = 1'b0;
+      end
+      for (int c = 0; c < 64 * 10 * clks_per_bit && np_rx_log.size() < 32; c++) begin
+        @(posedge clk);
+      end
+      check(np_rx_log.size() == 32 && !np_rx_bad && !np_overrun,
+            $sformatf("no parity: %0d clean characters of 32", np_rx_log.size()));
+      for (int i = 0; i < 32 && i < np_rx_log.size(); i++) begin
+        check(np_rx_log[i] == np_sent[i],
+              $sformatf("no parity word %0d: sent %h got %h", i, np_sent[i], np_rx_log[i]));
       end
     end
 
