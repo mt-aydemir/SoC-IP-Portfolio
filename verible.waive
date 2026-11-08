@@ -1,0 +1,10 @@
+# Verible waivers, applied by repo.verible. Each says why the rule cannot hold.
+
+# Yosys has no `parameter string`, so a file-name parameter stays untyped.
+waive --rule=explicit-parameter-storage-type --regex="INIT_FILE"
+
+# Formal wrappers state their properties in `always @(*)` blocks, the form
+# SymbiYosys documents for immediate assertions, and build model state with
+# block-local temporaries inside clocked blocks.
+waive --rule=always-comb --location=".*/formal/.*"
+waive --rule=always-ff-non-blocking --location=".*/formal/.*"

@@ -19,6 +19,11 @@ and this IP is versioned independently under
   scoreboard with functional coverage. Tests: `axil_random_test` and
   `axil_saturation_test`.
 
+### Changed
+
+- UVM constraint names end in `_c`, and the formal wrapper's payload
+  functions fit in 100 columns.
+
 ## [1.0.0] - 2026-11-01
 
 ### Added

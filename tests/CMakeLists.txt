@@ -26,4 +26,11 @@ if(SOC_IP_PYTHON)
     COMMAND "${SOC_IP_PYTHON}" "${CMAKE_CURRENT_SOURCE_DIR}/test_sdc_portable.py"
             --root "${CMAKE_SOURCE_DIR}")
   set_tests_properties(repo.sdc_portable PROPERTIES LABELS "repo" TIMEOUT 120)
+
+  if(SOC_IP_VERIBLE)
+    add_test(NAME repo.verible
+      COMMAND "${SOC_IP_PYTHON}" "${CMAKE_CURRENT_SOURCE_DIR}/test_verible.py"
+              --root "${CMAKE_SOURCE_DIR}" --verible "${SOC_IP_VERIBLE}")
+    set_tests_properties(repo.verible PROPERTIES LABELS "repo;lint" TIMEOUT 300)
+  endif()
 endif()

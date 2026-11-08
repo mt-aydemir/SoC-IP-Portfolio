@@ -12,6 +12,10 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Changed
+
+- The testbench's pass banner fits in 100 columns.
+
 ### Fixed
 
 - `scripts/accumulator.sdc` used Synopsys-only collection commands that OpenSTA

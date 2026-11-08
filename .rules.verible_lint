@@ -1,0 +1,3 @@
+# Verible lint rules, applied by repo.verible (tests/test_verible.py).
+# Parameters and localparams are UPPER_CASE in this repository.
++parameter-name-style=localparam_style:CamelCase|ALL_CAPS;parameter_style:CamelCase|ALL_CAPS

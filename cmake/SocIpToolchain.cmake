@@ -160,6 +160,22 @@ if(SOC_IP_SPHINX)
 endif()
 
 #-----------------------------------------------------------------------------
+# Verible - language and style lint (repo.verible)
+#
+# setup_env.sh unpacks a pinned release into ~/tools/verible-<tag>.
+#-----------------------------------------------------------------------------
+file(GLOB _verible_globbed "$ENV{HOME}/tools/verible-*/bin")
+list(SORT _verible_globbed COMPARE NATURAL ORDER DESCENDING)
+find_program(SOC_IP_VERIBLE NAMES verible-verilog-lint HINTS ${_verible_globbed})
+set(SOC_IP_VERIBLE_STATUS "not found (setup_env.sh installs it)")
+if(SOC_IP_VERIBLE)
+  execute_process(COMMAND "${SOC_IP_VERIBLE}" --version OUTPUT_VARIABLE _vb_out
+                  ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+  string(REGEX MATCH "v[0-9][^\n\t ]*" _vb_ver "${_vb_out}")
+  set(SOC_IP_VERIBLE_STATUS "Verible ${_vb_ver}")
+endif()
+
+#-----------------------------------------------------------------------------
 # Shared script locations
 #-----------------------------------------------------------------------------
 set(SOC_IP_SCRIPT_DIR "${CMAKE_SOURCE_DIR}/scripts"            CACHE INTERNAL "")

@@ -105,7 +105,8 @@ module tb_sha256;
       end
       {va, vb, vc, vd, ve, vf, vg, vh} = {hh[0], hh[1], hh[2], hh[3], hh[4], hh[5], hh[6], hh[7]};
       for (int t = 0; t < 64; t++) begin
-        x1 = vh + (ror(ve, 6) ^ ror(ve, 11) ^ ror(ve, 25)) + ((ve & vf) ^ (~ve & vg)) + K[t] + ww[t];
+        x1 = vh + (ror(ve, 6) ^ ror(ve, 11) ^ ror(ve, 25)) + ((ve & vf) ^ (~ve & vg))
+             + K[t] + ww[t];
         x2 = (ror(va, 2) ^ ror(va, 13) ^ ror(va, 22)) + ((va & vb) ^ (va & vc) ^ (vb & vc));
         vh = vg; vg = vf; vf = ve; ve = vd + x1;
         vd = vc; vc = vb; vb = va; va = x1 + x2;

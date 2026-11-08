@@ -67,9 +67,9 @@ package axi4_lite_slave_uvm_pkg;
     int unsigned max_delay = 3;
     int unsigned err_pct   = 10;
 
-    constraint c_delays { addr_delay <= max_delay; data_delay <= max_delay;
+    constraint delays_c { addr_delay <= max_delay; data_delay <= max_delay;
                           resp_delay <= max_delay; }
-    constraint c_addr   { addr dist { [12'h000:12'h03F] := (100 - err_pct),
+    constraint addr_c   { addr dist { [12'h000:12'h03F] := (100 - err_pct),
                                       [ERR_BASE:12'hFFF] := err_pct }; }
 
     `uvm_object_utils(axil_item)
@@ -538,7 +538,8 @@ package axi4_lite_slave_uvm_pkg;
         if (r.wdata != '0 || r.strb != '0)
           `uvm_error("SB", "read request with data or strobes")
         if (a.rdata != want)
-          `uvm_error("SB", $sformatf("read %03h returned %08h, expected %08h", r.addr, a.rdata, want))
+          `uvm_error("SB", $sformatf("read %03h returned %08h, expected %08h",
+                                     r.addr, a.rdata, want))
       end
       cv_write = r.write;
       cv_error = r.error;

@@ -12,6 +12,10 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Changed
+
+- The testbench's reference round fits in 100 columns.
+
 ## [1.0.0] - 2026-11-01
 
 ### Added

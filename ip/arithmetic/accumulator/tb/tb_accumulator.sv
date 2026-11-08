@@ -259,8 +259,9 @@ module tb_accumulator;
 
     // --- verdict ------------------------------------------------------------
     if (error_count == 0) begin
-      $display("TEST PASSED: tb_accumulator (%0d checks, DATA_WIDTH=%0d ACC_WIDTH=%0d SIGNED=%0d SATURATE=%0d)",
-               check_count, DATA_WIDTH, ACC_WIDTH, SIGNED, SATURATE);
+      $display("TEST PASSED: tb_accumulator (%0d checks, DATA_WIDTH=%0d ACC_WIDTH=%0d %s)",
+               check_count, DATA_WIDTH, ACC_WIDTH,
+               $sformatf("SIGNED=%0d SATURATE=%0d", SIGNED, SATURATE));
       $finish;
     end else begin
       $display("TEST FAILED: tb_accumulator, %0d error(s) in %0d checks",

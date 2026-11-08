@@ -167,6 +167,23 @@ Parameter legality is checked in an ``initial`` block with ``$fatal``, so an
 illegal configuration fails loudly at elaboration rather than producing subtly
 broken hardware.
 
+Verible
+=======
+
+``repo.verible`` runs Verible's linter over every SystemVerilog file: RTL,
+testbenches, formal wrappers and UVM environments. Verilator's lint checks
+what a simulator and synthesiser care about; Verible checks what a standard
+parser expects, such as a reserved word used as a name or an untyped function
+argument, and the naming and line-length rules above.
+
+The rules are in ``.rules.verible_lint``. The exceptions are in
+``verible.waive``, one line each with its reason: ``INIT_FILE`` stays untyped
+because Yosys has no ``parameter string``, and the formal wrappers keep the
+``always @(*)`` property blocks SymbiYosys documents.
+
+Formatting is not checked. ``verible-verilog-format`` would rewrite almost every
+file and lose the deliberate column alignment, so this guide governs layout.
+
 Lint exceptions
 ===============
 

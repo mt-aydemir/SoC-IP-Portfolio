@@ -99,25 +99,16 @@ module fifo_async #(
   // each position; written as a loop it is a prefix XOR chain, which is what
   // synthesis produces either way.
   //---------------------------------------------------------------------------
-  // Written in the Verilog-2001 function style rather than with SystemVerilog
-  // return types and `automatic`. Yosys does not accept
-  // `function automatic logic [N-1:0] f(input logic [N-1:0] x);` and rejects
-  // the block at parse time, and these blocks must synthesise.
-  //
-  // Both are pure functions of their argument with no state, so the lack of
-  // `automatic` costs nothing: they are never called recursively or
-  // concurrently in a way that could share the implicit static storage.
-  function [PTR_WIDTH-1:0] bin_to_gray(input [PTR_WIDTH-1:0] value);
+  // The result is assigned to the function name: Yosys does not accept
+  // `return` in a function, though it takes the typed, automatic declaration.
+  function automatic logic [PTR_WIDTH-1:0] bin_to_gray(input logic [PTR_WIDTH-1:0] value);
     bin_to_gray = value ^ (value >> 1);
   endfunction
 
-  function [PTR_WIDTH-1:0] gray_to_bin(input [PTR_WIDTH-1:0] value);
-    integer i;
-    begin
-      gray_to_bin[PTR_WIDTH-1] = value[PTR_WIDTH-1];
-      for (i = PTR_WIDTH - 1; i > 0; i = i - 1) begin
-        gray_to_bin[i-1] = gray_to_bin[i] ^ value[i-1];
-      end
+  function automatic logic [PTR_WIDTH-1:0] gray_to_bin(input logic [PTR_WIDTH-1:0] value);
+    gray_to_bin[PTR_WIDTH-1] = value[PTR_WIDTH-1];
+    for (int i = PTR_WIDTH - 1; i > 0; i--) begin
+      gray_to_bin[i-1] = gray_to_bin[i] ^ value[i-1];
     end
   endfunction
 

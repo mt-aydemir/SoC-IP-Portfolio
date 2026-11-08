@@ -96,14 +96,14 @@ module clk_divider_check #(
   logic [2:0] gap = '0;      // counted rising edges since clk_en was sampled high
   logic       gap_ok = 1'b0;
   logic       full_period = 1'b0;
-  logic       tog, rise, fall, edge, change, cut, steady_now;
+  logic       tog, rise, fall, cnt_edge, change, cut, steady_now;
 
   assign tog    = clk != p_clk;
   assign rise   = clk && !p_clk;
   assign fall   = !clk && p_clk;
-  assign edge   = rise && p_rst && rst_n;     // a rising edge the counters see
+  assign cnt_edge   = rise && p_rst && rst_n;     // a rising edge the counters see
   assign change = clk_out != p_out;
-  assign cut    = (edge && !p_en) || !rst_n;   // this step disables or resets
+  assign cut    = (cnt_edge && !p_en) || !rst_n;   // this step disables or resets
   assign steady_now = steady && !cut;
 
   always @(posedge gclk) begin
@@ -113,20 +113,20 @@ module clk_divider_check #(
     p_en     <= enable;
     p_out    <= clk_out;
     p_clk_en <= clk_en;
-    if (edge) off <= !p_en;
+    if (cnt_edge) off <= !p_en;
     if (!rst_n) off <= 1'b1;
     if (change) begin
       half   <= 3'd0;
-      steady <= !(edge && !p_en) && rst_n;
+      steady <= !(cnt_edge && !p_en) && rst_n;
       if (steady && clk_out) full_period <= 1'b1;
     end else begin
       if (tog && half != 3'd7) half <= half + 3'd1;
-      if ((edge && !p_en) || !rst_n) steady <= 1'b0;
+      if ((cnt_edge && !p_en) || !rst_n) steady <= 1'b0;
     end
-    if (!rst_n || (edge && !p_en)) begin
+    if (!rst_n || (cnt_edge && !p_en)) begin
       gap    <= '0;
       gap_ok <= 1'b0;
-    end else if (edge) begin
+    end else if (cnt_edge) begin
       if (p_clk_en) begin
         gap    <= '0;
         gap_ok <= 1'b1;
@@ -147,11 +147,11 @@ module clk_divider_check #(
       if (steady_now && change) assert (half + 3'd1 == 3'(D));
       if (steady_now && !change) assert (half + 3'(tog) < 3'(D));
       // Enable
-      if (off && !(edge && p_en)) assert (!clk_out);
+      if (off && !(cnt_edge && p_en)) assert (!clk_out);
       if (!enable) assert (!clk_en);
       // clk_en period
-      if (edge && !cut && p_clk_en && gap_ok) assert (gap == 3'(D - 1));
-      if (edge && !cut && !p_clk_en && gap_ok) assert (gap < 3'(D - 1));
+      if (cnt_edge && !cut && p_clk_en && gap_ok) assert (gap == 3'(D - 1));
+      if (cnt_edge && !cut && !p_clk_en && gap_ok) assert (gap < 3'(D - 1));
 
       // Where the counter and phase flops stand, on quiet steps
       assert (f_count <= 2'(D - 1));
@@ -187,7 +187,7 @@ module clk_divider_check #(
   // one is generated only in the odd instance.
   if (D % 2 == 1) begin : g_odd_cover
     always @(*) begin
-      if (started) cover (p_out && !clk_out && edge && !p_en);
+      if (started) cover (p_out && !clk_out && cnt_edge && !p_en);
     end
   end
 

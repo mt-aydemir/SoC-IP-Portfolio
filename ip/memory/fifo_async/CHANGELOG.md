@@ -8,6 +8,12 @@ and this IP is versioned independently under
 
 ## [Unreleased]
 
+### Changed
+
+- The Gray-code helpers are typed `automatic` functions. Their comment said
+  Yosys rejects that form; it rejects `return`, which they do not use. No
+  change in behaviour or netlist function.
+
 ### Fixed
 
 - `scripts/fifo_async.sdc` now uses only commands common to OpenSTA, Synopsys

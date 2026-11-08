@@ -57,11 +57,11 @@ package apb_slave_uvm_pkg;
     int unsigned max_idle = 3;
     int unsigned err_pct  = 10;
 
-    constraint c_read_strb { !write -> strb == '0; }
-    constraint c_idle      { idle <= max_idle;
+    constraint read_strb_c { !write -> strb == '0; }
+    constraint idle_c      { idle <= max_idle;
                              idle dist { 0 := 6, [1:3] := 3, [4:16] := 1 }; }
     // Most traffic hits a small window, so reads often return written data.
-    constraint c_addr      { addr dist { [12'h000:12'h03F] := (100 - err_pct),
+    constraint addr_c      { addr dist { [12'h000:12'h03F] := (100 - err_pct),
                                          [ERR_BASE:12'hFFF] := err_pct }; }
 
     `uvm_object_utils(apb_item)
@@ -397,7 +397,8 @@ package apb_slave_uvm_pkg;
       end else begin
         want = (a.slverr || !ref_mem.exists(a.addr)) ? '0 : ref_mem[a.addr];
         if (a.rdata != want)
-          `uvm_error("SB", $sformatf("read %03h returned %08h, expected %08h", a.addr, a.rdata, want))
+          `uvm_error("SB", $sformatf("read %03h returned %08h, expected %08h",
+                                     a.addr, a.rdata, want))
       end
       cv_write = a.write;
       cv_error = a.slverr;

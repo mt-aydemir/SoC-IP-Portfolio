@@ -11,7 +11,8 @@ IP that fails any stage does not ship.
 |---|---|
 | **Language** | SystemVerilog-2017, synthesisable subset |
 | **Targets** | FPGA and ASIC — no vendor primitives, no vendor attributes |
-| **Lint** | Verilator `-Wall`, zero warnings tolerated |
+| **Lint** | Verilator `-Wall`, zero warnings tolerated; Verible for language and style |
+| **Coverage** | Line, branch and toggle coverage of every block's own RTL, on demand |
 | **Simulation** | cocotb, plus a self-checking SystemVerilog testbench per IP |
 | **Formal** | SymbiYosys k-induction proofs for twenty blocks, CDC and clocking included |
 | **UVM** | UVM 1800.2-2020 environments for the APB and AXI4-Lite bridges, on Verilator |

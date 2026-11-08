@@ -49,12 +49,24 @@ module axi4_lite_slave_formal (
 );
 
   // Channel payloads from the channel's handshake count.
-  function automatic logic [3:0]  aw_addr_of(input logic [3:0] n); aw_addr_of = n;            endfunction
-  function automatic logic [2:0]  aw_prot_of(input logic [3:0] n); aw_prot_of = n[2:0] ^ 3'd5; endfunction
-  function automatic logic [31:0] w_data_of (input logic [3:0] n); w_data_of  = {8{n}};        endfunction
-  function automatic logic [3:0]  w_strb_of (input logic [3:0] n); w_strb_of  = ~n;            endfunction
-  function automatic logic [3:0]  ar_addr_of(input logic [3:0] n); ar_addr_of = n ^ 4'hA;      endfunction
-  function automatic logic [2:0]  ar_prot_of(input logic [3:0] n); ar_prot_of = n[3:1];        endfunction
+  function automatic logic [3:0] aw_addr_of(input logic [3:0] n);
+    aw_addr_of = n;
+  endfunction
+  function automatic logic [2:0] aw_prot_of(input logic [3:0] n);
+    aw_prot_of = n[2:0] ^ 3'd5;
+  endfunction
+  function automatic logic [31:0] w_data_of(input logic [3:0] n);
+    w_data_of = {8{n}};
+  endfunction
+  function automatic logic [3:0] w_strb_of(input logic [3:0] n);
+    w_strb_of = ~n;
+  endfunction
+  function automatic logic [3:0] ar_addr_of(input logic [3:0] n);
+    ar_addr_of = n ^ 4'hA;
+  endfunction
+  function automatic logic [2:0] ar_prot_of(input logic [3:0] n);
+    ar_prot_of = n[3:1];
+  endfunction
 
   logic [3:0] aw_n, w_n, ar_n, wreq_n, rreq_n, b_n, r_n;
 
@@ -189,7 +201,8 @@ module axi4_lite_slave_formal (
       if (reg_valid && !reg_write)
         assert (reg_addr == ar_addr_of(rreq_n) && reg_prot == ar_prot_of(rreq_n)
                 && reg_wdata == '0 && reg_strb == '0);
-      if (reg_valid) assert (reg_write ? (f_aw_full && f_w_full && !bvalid) : (f_ar_full && !rvalid));
+      if (reg_valid)
+        assert (reg_write ? (f_aw_full && f_w_full && !bvalid) : (f_ar_full && !rvalid));
       // Response
       if (bvalid) assert (bresp == (b_err ? 2'b10 : 2'b00));
       if (rvalid) assert (rresp == (r_err ? 2'b10 : 2'b00) && rdata == r_data);

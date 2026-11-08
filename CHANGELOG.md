@@ -11,6 +11,14 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Verible lint.** `repo.verible` lints every SystemVerilog file (RTL,
+  testbenches, formal wrappers, UVM) against `.rules.verible_lint`, with the
+  exceptions and their reasons in `verible.waive`. `setup_env.sh` installs a
+  pinned, checksummed Verible release unless `--no-verible`. It found two formal
+  wrappers using the keyword `edge` as a name, which Yosys accepts and a
+  standard parser rejects; untyped, static Gray-code functions in `fifo_async`,
+  whose comment wrongly blamed Yosys; UVM constraint names; and eleven lines
+  over 100 columns. Formatting is not enforced.
 - **Code coverage.** `-DSOC_IP_ENABLE_COVERAGE=ON` builds the cocotb and
   SystemVerilog testbench runs with `verilator --coverage`, and
   `coverage.<category>.<name>` reports the line, branch and toggle points of

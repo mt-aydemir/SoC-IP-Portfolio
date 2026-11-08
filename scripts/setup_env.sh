@@ -12,6 +12,7 @@
 #     ./scripts/setup_env.sh --no-root    # no sudo anywhere: CMake, Ninja and
 #                                         # Yosys from PyPI into the venv
 #     ./scripts/setup_env.sh --uvm        # also build Verilator for UVM
+#     ./scripts/setup_env.sh --no-verible # skip the Verible lint binaries
 #
 # --uvm adds the UVM stage's toolchain, which no distribution packages: a
 # Verilator new enough for UVM (5.052 or later) built from source into
@@ -48,6 +49,10 @@ DO_VENV=1
 DO_STA=1
 DO_PIP_EDA=0
 DO_UVM=0
+DO_VERIBLE=1
+# Verible publishes static Linux binaries; the release and its checksum are pinned.
+VERIBLE_TAG="${VERIBLE_TAG:-v0.0-4298-g085eef05}"
+VERIBLE_SHA256="${VERIBLE_SHA256:-ca83778c7c2b73272277bd670d1851c8caf973fd3283688aeb0d36d4b3598a90}"
 UVM_VERILATOR_VERSION="${UVM_VERILATOR_VERSION:-5.054}"
 TOOLS="${SOC_IP_TOOLS:-$HOME/tools}"
 
@@ -59,6 +64,7 @@ for arg in "$@"; do
     --no-venv)  DO_VENV=0 ;;
     --no-root)  DO_APT=0; DO_PIP_EDA=1 ;;
     --uvm)      DO_UVM=1 ;;
+    --no-verible) DO_VERIBLE=0 ;;
     -h|--help)  sed -n '2,30p' "$0"; exit 0 ;;
     *) echo "unknown option: $arg" >&2; exit 2 ;;
   esac
@@ -255,6 +261,24 @@ WRAP
 fi
 
 #-----------------------------------------------------------------------------
+# 3a. Verible, the language and style linter (static binaries, no root)
+#-----------------------------------------------------------------------------
+if [ "$DO_VERIBLE" = 1 ]; then
+  VERIBLE_DIR="$TOOLS/verible-$VERIBLE_TAG"
+  if [ -x "$VERIBLE_DIR/bin/verible-verilog-lint" ]; then
+    say "Verible $VERIBLE_TAG already installed: $VERIBLE_DIR"
+  else
+    say "Installing Verible $VERIBLE_TAG into $VERIBLE_DIR"
+    VERIBLE_TGZ="verible-$VERIBLE_TAG-linux-static-x86_64.tar.gz"
+    mkdir -p "$TOOLS/src" "$VERIBLE_DIR"
+    curl -fsSL -o "$TOOLS/src/$VERIBLE_TGZ" \
+      "https://github.com/chipsalliance/verible/releases/download/$VERIBLE_TAG/$VERIBLE_TGZ"
+    echo "$VERIBLE_SHA256  $TOOLS/src/$VERIBLE_TGZ" | sha256sum -c --quiet -
+    tar xzf "$TOOLS/src/$VERIBLE_TGZ" -C "$VERIBLE_DIR" --strip-components=1
+  fi
+fi
+
+#-----------------------------------------------------------------------------
 # 3b. Verilator for UVM, and the UVM kit (--uvm)
 #-----------------------------------------------------------------------------
 if [ "$DO_UVM" = 1 ]; then
@@ -329,6 +353,9 @@ check verilator
 check yosys -V
 check gtkwave
 check sta -version
+for v in "$TOOLS"/verible-*/bin/verible-verilog-lint; do
+  [ -x "$v" ] && printf '  %-14s %s\n' "verible" "$("$v" --version | head -1)"
+done
 for v in "$TOOLS"/verilator-*/bin/verilator; do
   [ -x "$v" ] && printf '  %-14s %s\n' "verilator-uvm" "$("$v" --version | head -1)"
 done

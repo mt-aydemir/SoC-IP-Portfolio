@@ -66,12 +66,12 @@ module reset_controller_formal (
   logic [N-1:0] p_out = '0;
   logic [3:0] k = '0;         // counted edges since release; SYNC means "counter just released"
   logic [3:0] k_now;
-  logic       edge;
+  logic       rise_edge;
   logic       released_all = 1'b0, sw_after = 1'b0, again = 1'b0, mid = 1'b0;
 
-  assign edge  = clk && !p_clk && p_arst && arst_n_in;
+  assign rise_edge  = clk && !p_clk && p_arst && arst_n_in;
   assign k_now = !arst_n_in ? 4'd0
-               : !edge ? k
+               : !rise_edge ? k
                : (p_sw && k >= 4'(SYNC)) ? 4'(SYNC)
                : (k == 4'(KCAP)) ? k : k + 4'd1;
 
@@ -82,7 +82,7 @@ module reset_controller_formal (
     p_out  <= rst_n_out;
     k      <= k_now;
     if (rst_n_out[N-1]) released_all <= 1'b1;
-    if (released_all && edge && p_sw) sw_after <= 1'b1;
+    if (released_all && rise_edge && p_sw) sw_after <= 1'b1;
     if (sw_after && rst_n_out[N-1] && !p_out[N-1]) again <= 1'b1;
     if (!arst_n_in && p_arst && p_out[0] && !p_out[N-1]) mid <= 1'b1;
   end

@@ -10,6 +10,8 @@ and this IP is versioned independently under
 
 ### Fixed
 
+- The formal wrapper named a signal `edge`, a SystemVerilog keyword that
+  Yosys accepts and a standard parser rejects. Renamed `rise_edge`.
 - `scripts/reset_controller.sdc` now uses only commands common to OpenSTA, Synopsys
   tools and Vivado, and takes the instance as a hierarchical name.
 - The delegated reset-synchroniser constraints now receive an instance
