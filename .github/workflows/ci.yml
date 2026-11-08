@@ -83,10 +83,12 @@ jobs:
 
       - name: Configure
         run: |
-          cmake -S . -B build -G Ninja -DSOC_IP_WAVES=OFF | tee configure.log
+          # The log goes under build/: nothing generated may land in the source.
+          mkdir -p build
+          cmake -S . -B build -G Ninja -DSOC_IP_WAVES=OFF | tee build/configure.log
           # A missing tool only drops its stage, so a green run would hide it.
           if grep -E '^--   (Verilator|Yosys|OpenSTA|Formal|UVM|cocotb python) +:.*(not found|MISSING|no SMT solver)' \
-               configure.log; then
+               build/configure.log; then
             echo "::error::a flow stage has no tool"; exit 1
           fi
 
