@@ -194,6 +194,9 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Re-running the Pages job could not deploy.** The re-run uploaded a second
+  `github-pages` artifact to the same run and `deploy-pages` refused both. The
+  artifact is now named after the run attempt.
 - **CI timed out synthesising `cnn_accel` on a slow runner.** YoWASP took
   550 s on one hosted runner and over 900 s, the local default limit, on
   another for the same RTL. CI now allows 2400 s per synthesis.
