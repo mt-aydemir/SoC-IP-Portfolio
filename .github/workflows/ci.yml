@@ -99,7 +99,10 @@ jobs:
         run: |
           # The log goes under build/: nothing generated may land in the source.
           mkdir -p build
-          cmake -S . -B build -G Ninja -DSOC_IP_WAVES=OFF | tee build/configure.log
+          # Hosted runners vary: YoWASP synthesis of cnn_accel has taken from
+          # 550 s to over 900 s (the local default limit) on the same commit.
+          cmake -S . -B build -G Ninja -DSOC_IP_WAVES=OFF -DSOC_IP_SYNTH_TIMEOUT=2400 \
+            | tee build/configure.log
           # A missing tool only drops its stage, so a green run would hide it.
           if grep -E '^--   (Verilator|Yosys|OpenSTA|Formal|UVM|Verible|cocotb python) +:.*(not found|MISSING|no SMT solver)' \
                build/configure.log; then

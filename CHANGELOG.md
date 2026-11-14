@@ -194,6 +194,9 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **CI timed out synthesising `cnn_accel` on a slow runner.** YoWASP took
+  550 s on one hosted runner and over 900 s, the local default limit, on
+  another for the same RTL. CI now allows 2400 s per synthesis.
 - **Documentation build broke with myst-parser 5.2.** `conf.py` enables the
   MyST `linkify` extension, but its package was never installed, so it was
   silently off; myst-parser 5.2 warns about it and `-W` fails the build. CI
