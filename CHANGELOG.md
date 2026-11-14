@@ -11,6 +11,13 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **Delivery from CI.** A green push to `main` publishes the documentation to
+  GitHub Pages with the same run's flow reports under `reports/`, summarised
+  per IP and stage by `scripts/build_site.py`. A green tag `vX.Y.Z` becomes a
+  GitHub release carrying its `CHANGELOG` section (`scripts/release_notes.py`),
+  the source, documentation and reports, and their SHA-256 sums; a tag without
+  a matching section fails in the first job. `repo.release_tools` tests both
+  scripts, including that a failing report is shown as failing.
 - **Verible lint.** `repo.verible` lints every SystemVerilog file (RTL,
   testbenches, formal wrappers, UVM) against `.rules.verible_lint`, with the
   exceptions and their reasons in `verible.waive`. `setup_env.sh` installs a
