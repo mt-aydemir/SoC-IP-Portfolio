@@ -194,6 +194,10 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Documentation build broke with myst-parser 5.2.** `conf.py` enables the
+  MyST `linkify` extension, but its package was never installed, so it was
+  silently off; myst-parser 5.2 warns about it and `-W` fails the build. CI
+  and `setup_env.sh` now install `myst-parser[linkify]`.
 - **Code coverage dropped the cocotb runs on a checkout reached through a
   symlink.** cocotb records sources with the link resolved and the SystemVerilog
   testbench does not, so `run_coverage.py` matched only one of them. It compares

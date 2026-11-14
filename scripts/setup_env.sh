@@ -123,7 +123,7 @@ if [ "$DO_VENV" = 1 ]; then
     pytest-xdist \
     sphinx \
     sphinx-rtd-theme \
-    myst-parser \
+    "myst-parser[linkify]" \
     sphinxcontrib-wavedrom \
     numpy \
     pyyaml \

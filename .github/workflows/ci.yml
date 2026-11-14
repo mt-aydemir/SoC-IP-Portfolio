@@ -157,7 +157,7 @@ jobs:
           python -m venv "$SOC_IP_VENV"
           "$SOC_IP_VENV/bin/python" -m pip install --upgrade --quiet pip
           "$SOC_IP_VENV/bin/python" -m pip install --quiet \
-            sphinx sphinx-rtd-theme myst-parser
+            sphinx sphinx-rtd-theme "myst-parser[linkify]"
 
       - name: Build documentation
         run: |
