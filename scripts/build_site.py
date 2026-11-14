@@ -47,7 +47,14 @@ def read_synth(path: Path) -> tuple[bool, str]:
 
 
 def read_sta(path: Path) -> tuple[bool, str]:
-    found = SLACK.findall(path.read_text(encoding="utf-8", errors="replace"))
+    text = path.read_text(encoding="utf-8", errors="replace")
+    if path.name.endswith(".sdc.rpt"):
+        # Check-only mode (run_sta.py --check-only): the fragment of a block
+        # the single-clock analysis cannot time is sourced, and passes when
+        # every command runs. Its paths are printed for review, not judged.
+        ok = "SDC FAILED" not in text
+        return ok, "constraints applied" if ok else "SDC failed"
+    found = SLACK.findall(text)
     if not found:
         return False, "no timing path"
     worst = min(float(v) for v, _ in found)

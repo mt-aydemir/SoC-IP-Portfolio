@@ -194,6 +194,11 @@ the repository uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **The report page marked `cnn_accel`'s constraint check as a timing
+  failure.** A check-only report (`*.sdc.rpt`) prints the paths of a block the
+  single-clock analysis cannot time, unconstrained ones included, and judges
+  only that the fragment runs; `build_site.py` read its slack as a verdict. It
+  now passes such a report unless it says `SDC FAILED`, as `run_sta.py` does.
 - **Re-running the Pages job could not deploy.** The re-run uploaded a second
   `github-pages` artifact to the same run and `deploy-pages` refused both. The
   artifact is now named after the run attempt.

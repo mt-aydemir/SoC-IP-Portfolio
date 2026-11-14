@@ -50,6 +50,9 @@ REPORTS = {
     "synth/good.json": json.dumps({"status": "pass", "total_cells": 128, "area": 209.4}),
     "sta/good.rpt": "  3.6870   slack (MET)\n  1.2500   slack (MET)\n",
     "sta/bad.rpt": "  -0.5000   slack (VIOLATED)\n",
+    # Check-only: unconstrained paths print a negative slack nobody judges.
+    "sta/check.sdc.rpt": "# OpenSTA: check (constraint check)\n  -1945.19   slack (VIOLATED)\n",
+    "sta/broken.sdc.rpt": "SDC FAILED: invalid command name \"sizeof_collection\"\n",
     "formal/good.log": "summary: successful proof\nDONE (PASS, rc=0)\n",
     "svtb/good.log": "TEST PASSED: tb_good\n",
     "uvm/bad.registered_0.random_test.log": "UVM_ERROR :    2\nUVM_FATAL :    0\n",
@@ -62,6 +65,8 @@ EXPECTED = {  # report -> (passed, text that must appear in its cell)
     "synth/good.json": (True, "128 cells"),
     "sta/good.rpt": (True, "worst slack 1.25 ns"),
     "sta/bad.rpt": (False, "worst slack -0.5 ns"),
+    "sta/check.sdc.rpt": (True, "constraints applied"),
+    "sta/broken.sdc.rpt": (False, "SDC failed"),
     "formal/good.log": (True, "proved"),
     "svtb/good.log": (True, "passed"),
     "uvm/bad.registered_0.random_test.log": (False, "2 errors"),
@@ -116,7 +121,7 @@ def check_site(root: Path, tmp: Path) -> list[str]:
             errors.append(f"{rel}: expected a {'pass' if ok else 'fail'} cell linking it")
         if text not in page:
             errors.append(f"{rel}: summary text {text!r} missing")
-    if "6 of 9 reports passed" not in page:
+    if "7 of 11 reports passed" not in page:
         errors.append("headline count wrong")
     return errors
 
